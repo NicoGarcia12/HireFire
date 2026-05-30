@@ -23,7 +23,7 @@ export const searchRouter = Router();
 searchRouter.post('/', validateBody(fullSearchSchema), async (req, res, next) => {
   try {
     const { profileId, ...searchParams } = req.body;
-    const profile = getProfile(profileId);
+    const profile = await getProfile(profileId);
     if (!profile) {
       res.status(404).json({ error: 'Perfil no encontrado' });
       return;

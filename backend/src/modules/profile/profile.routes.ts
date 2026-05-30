@@ -5,16 +5,24 @@ import { getProfile, saveProfile } from './profile.service.js';
 
 export const profileRouter = Router();
 
-profileRouter.post('/', validateBody(profileSchema), (req, res) => {
-  const profile = saveProfile(req.body);
-  res.status(201).json(profile);
+profileRouter.post('/', validateBody(profileSchema), async (req, res, next) => {
+  try {
+    const profile = await saveProfile(req.body);
+    res.status(201).json(profile);
+  } catch (err) {
+    next(err);
+  }
 });
 
-profileRouter.get('/:id', (req, res) => {
-  const profile = getProfile(req.params.id);
-  if (!profile) {
-    res.status(404).json({ error: 'Perfil no encontrado' });
-    return;
+profileRouter.get('/:id', async (req, res, next) => {
+  try {
+    const profile = await getProfile(req.params.id);
+    if (!profile) {
+      res.status(404).json({ error: 'Perfil no encontrado' });
+      return;
+    }
+    res.json(profile);
+  } catch (err) {
+    next(err);
   }
-  res.json(profile);
 });

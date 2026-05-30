@@ -23,7 +23,7 @@ semánticamente** contra tu perfil usando la **API de Claude**.
 
 - [x] **Fase 1 — MVP backend**: API REST, integración Apify, matching con Claude
 - [x] **Fase 2a — UI Angular**: perfil + búsqueda + resultados rankeados
-- [ ] **Fase 2b — Persistencia PostgreSQL/Prisma**
+- [x] **Fase 2b — Persistencia PostgreSQL/Prisma**: el perfil ya no se pierde al reiniciar
 - [ ] **Fase 3 — Auth, historial, alertas**
 - [ ] **Fase 4 — Importador del export de LinkedIn**
 
@@ -32,11 +32,19 @@ semánticamente** contra tu perfil usando la **API de Claude**.
 ## Puesta en marcha (backend)
 
 ```bash
+# 1) Levantar PostgreSQL (desde la raíz del repo)
+docker compose up -d
+
+# 2) Backend
 cd backend
-cp .env.example .env   # completar APIFY_TOKEN y ANTHROPIC_API_KEY
+cp .env.example .env       # completar APIFY_TOKEN y ANTHROPIC_API_KEY
 npm install
+npm run db:push            # crea las tablas en la DB (o: npm run prisma:migrate)
 npm run dev
 ```
+
+> La base corre con `docker-compose.yml` (Postgres 16). El `DATABASE_URL` del
+> `.env.example` ya apunta a ese contenedor (`hirefire:hirefire@localhost:5432`).
 
 ## Puesta en marcha (frontend Angular)
 
@@ -57,6 +65,7 @@ npm start            # ng serve → http://localhost:4200
 | Variable            | Descripción                                   |
 |---------------------|-----------------------------------------------|
 | `PORT`              | Puerto del servidor (default 3000)            |
+| `DATABASE_URL`      | Cadena de conexión PostgreSQL (Prisma)        |
 | `APIFY_TOKEN`       | Token de Apify                                |
 | `APIFY_JOBS_ACTOR`  | Actor de jobs (default `bebity~linkedin-jobs-scraper`) |
 | `ANTHROPIC_API_KEY` | API key de Claude                             |

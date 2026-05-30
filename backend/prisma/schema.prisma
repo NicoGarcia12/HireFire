@@ -1,0 +1,33 @@
+// Prisma schema — HireFire (Fase 2b)
+// Persiste perfiles y su experiencia en PostgreSQL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id         String       @id @default(uuid())
+  headline   String
+  summary    String       @default("")
+  skills     String[]
+  locations  String[]
+  remote     Boolean      @default(false)
+  seniority  String?
+  experience Experience[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model Experience {
+  id          String  @id @default(uuid())
+  title       String
+  company     String
+  description String  @default("")
+  profile     Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String
+}

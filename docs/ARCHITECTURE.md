@@ -27,7 +27,7 @@
 | Matching    | Claude API (`@anthropic-ai/sdk`)             |
 | Validación  | Zod                                          |
 | Frontend    | Angular (standalone components + signals)    |
-| Persistencia| Fase 1: en memoria/JSON · Fase 2: PostgreSQL + Prisma |
+| Persistencia| PostgreSQL + Prisma (perfiles) — vía `docker-compose.yml` |
 
 ---
 
@@ -145,6 +145,7 @@ interface MatchResult extends Job {
 
 ```
 PORT=3000
+DATABASE_URL=postgresql://hirefire:hirefire@localhost:5432/hirefire?schema=public
 APIFY_TOKEN=apify_api_xxx
 APIFY_JOBS_ACTOR=bebity~linkedin-jobs-scraper
 ANTHROPIC_API_KEY=sk-ant-xxx
@@ -153,10 +154,23 @@ CLAUDE_MODEL=claude-sonnet-4-6
 
 ---
 
+## 8b. Persistencia (Prisma)
+
+- Postgres local vía `docker-compose.yml` (raíz del repo).
+- Schema en `backend/prisma/schema.prisma`: modelos `Profile` y `Experience`
+  (relación 1‑N con borrado en cascada).
+- Cliente Prisma singleton en `config/db.ts` (reutilizado en dev para no agotar el pool).
+- `profile.service.ts` conserva su interfaz pública (`saveProfile`/`getProfile`), ahora
+  asíncrona y respaldada por la DB → las rutas no cambiaron su contrato.
+- Crear tablas: `npm run db:push` (rápido) o `npm run prisma:migrate` (con historial).
+
+---
+
 ## 9. Roadmap
 
-- **Fase 1 (MVP)** — Backend Express + Apify + Claude, perfil en memoria, endpoints REST.
-- **Fase 2** — UI Angular (búsqueda, ranking, guardar postulaciones), persistencia PostgreSQL + Prisma.
+- **Fase 1 (MVP)** ✅ — Backend Express + Apify + Claude, endpoints REST.
+- **Fase 2a** ✅ — UI Angular (perfil, búsqueda, ranking de resultados).
+- **Fase 2b** ✅ — Persistencia PostgreSQL + Prisma (perfiles).
 - **Fase 3** — Auth (login propio), historial de búsquedas, alertas por keywords nuevas.
 - **Fase 4** — Importador del ZIP de export de LinkedIn → autocompletar el perfil.
 

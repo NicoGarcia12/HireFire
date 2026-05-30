@@ -14,6 +14,7 @@ function optional(name: string, fallback: string): string {
 
 export const env = {
   port: Number(optional('PORT', '3000')),
+  databaseUrl: required('DATABASE_URL'),
   apify: {
     token: required('APIFY_TOKEN'),
     jobsActor: optional('APIFY_JOBS_ACTOR', 'bebity~linkedin-jobs-scraper'),

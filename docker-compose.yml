@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hirefire-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hirefire
+      POSTGRES_PASSWORD: hirefire
+      POSTGRES_DB: hirefire
+    ports:
+      - "5432:5432"
+    volumes:
+      - hirefire_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hirefire -d hirefire"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  hirefire_pgdata:
