@@ -27,8 +27,8 @@ según cuánto encajan con tu experiencia.
 - [x] **Fase 1** — Backend Express + API REST + Apify + matching con Groq/Llama
 - [x] **Fase 2a** — UI Angular (perfil, búsqueda, resultados rankeados)
 - [x] **Fase 2b** — Persistencia PostgreSQL + Prisma
-- [ ] **Fase 3** — Auth, historial de búsquedas, alertas por keywords
-- [ ] **Fase 4** — Importador del export ZIP de LinkedIn
+- [x] **Fase 3** — Historial de búsquedas + búsquedas guardadas (alertas)
+- [x] **Fase 4** — Importador del export ZIP de LinkedIn → auto-fill del perfil
 
 ---
 
@@ -171,6 +171,18 @@ npm start
 Salida esperada: `Local: http://localhost:4200`
 
 Abrir **http://localhost:4200** en el navegador.
+
+---
+
+## Importar tu perfil desde LinkedIn
+
+1. En LinkedIn: **Configuración → Privacidad de datos → Obtener una copia de tus datos**
+2. Seleccioná la opción rápida (Parte 1) — llega en minutos u horas.
+3. Subí el ZIP directamente — el importador toma solo `Profile.csv`, `Positions.csv` y `Skills.csv` e ignora el resto.
+4. En la UI: clic en **⬆ Importar LinkedIn ZIP** → seleccionás el archivo.
+5. El formulario se pre-llena automáticamente. Revisás, ajustás y clic en **Guardar perfil**.
+
+> El ZIP se procesa en el backend local — nunca sale de tu máquina.
 
 ---
 

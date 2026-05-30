@@ -1,6 +1,3 @@
-// Prisma schema — HireFire (Fase 2b)
-// Persiste perfiles y su experiencia en PostgreSQL.
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,16 +8,18 @@ datasource db {
 }
 
 model Profile {
-  id         String       @id @default(uuid())
-  headline   String
-  summary    String       @default("")
-  skills     String[]
-  locations  String[]
-  remote     Boolean      @default(false)
-  seniority  String?
-  experience Experience[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id           String        @id @default(uuid())
+  headline     String
+  summary      String        @default("")
+  skills       String[]
+  locations    String[]
+  remote       Boolean       @default(false)
+  seniority    String?
+  experience   Experience[]
+  searches     Search[]
+  savedSearches SavedSearch[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Experience {
@@ -30,4 +29,31 @@ model Experience {
   description String  @default("")
   profile     Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   profileId   String
+}
+
+// Historial: cada búsqueda completa ejecutada
+model Search {
+  id         String   @id @default(uuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  keywords   String
+  location   String?
+  remote     Boolean  @default(false)
+  limit      Int
+  count      Int
+  topResults Json     // top 10 resultados para preview
+  createdAt  DateTime @default(now())
+}
+
+// Búsquedas guardadas (alertas): re-ejecutar con un click
+model SavedSearch {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name      String
+  keywords  String
+  location  String?
+  remote    Boolean  @default(false)
+  limit     Int      @default(30)
+  createdAt DateTime @default(now())
 }

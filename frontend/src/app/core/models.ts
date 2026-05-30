@@ -1,5 +1,3 @@
-/** Contratos compartidos con el backend (backend/src/types/domain.ts). */
-
 export interface ProfileExperience {
   title: string;
   company: string;
@@ -38,4 +36,34 @@ export interface MatchResult {
 export interface SearchResponse {
   count: number;
   results: MatchResult[];
+}
+
+export interface SearchRecord {
+  id: string;
+  keywords: string;
+  location?: string;
+  remote: boolean;
+  limit: number;
+  count: number;
+  topResults: MatchResult[];
+  createdAt: string;
+}
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  profileId: string;
+  keywords: string;
+  location?: string;
+  remote: boolean;
+  limit: number;
+  createdAt: string;
+}
+
+export interface LinkedInImport {
+  headline: string;
+  summary: string;
+  skills: string[];
+  experience: ProfileExperience[];
+  filesFound: string[];
 }

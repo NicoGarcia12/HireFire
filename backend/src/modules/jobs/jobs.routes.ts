@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { validateBody } from '../../middleware/validate.js';
-import { getProfile } from '../profile/profile.service.js';
+import { saveSearch } from '../history/history.service.js';
 import { rankJobs } from '../matching/matching.service.js';
+import { getProfile } from '../profile/profile.service.js';
 import { fullSearchSchema, jobSearchSchema } from './jobs.schema.js';
 import { searchJobs } from './jobs.service.js';
 
@@ -17,7 +18,7 @@ jobsRouter.post('/search', validateBody(jobSearchSchema), async (req, res, next)
   }
 });
 
-/** Flujo completo: buscar en Apify + rankear contra el perfil con Claude. */
+/** Flujo completo: buscar en Apify + rankear + guardar en historial. */
 export const searchRouter = Router();
 
 searchRouter.post('/', validateBody(fullSearchSchema), async (req, res, next) => {
@@ -31,6 +32,17 @@ searchRouter.post('/', validateBody(fullSearchSchema), async (req, res, next) =>
 
     const jobs = await searchJobs(searchParams);
     const ranked = await rankJobs(profile, jobs);
+
+    // Guardar en historial de forma silenciosa (no bloquea la respuesta).
+    saveSearch({
+      profileId,
+      keywords: searchParams.keywords,
+      location: searchParams.location,
+      remote: searchParams.remote ?? false,
+      limit: searchParams.limit ?? 30,
+      results: ranked,
+    }).catch(() => {/* historial no es crítico */});
+
     res.json({ count: ranked.length, results: ranked });
   } catch (err) {
     next(err);
