@@ -15,7 +15,7 @@
     "db:push": "prisma db push"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
+    "openai": "^4.77.0",
     "@prisma/client": "^6.2.1",
     "apify-client": "^2.11.0",
     "cors": "^2.8.5",

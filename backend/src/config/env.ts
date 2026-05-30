@@ -19,8 +19,9 @@ export const env = {
     token: required('APIFY_TOKEN'),
     jobsActor: optional('APIFY_JOBS_ACTOR', 'bebity~linkedin-jobs-scraper'),
   },
-  claude: {
-    apiKey: required('ANTHROPIC_API_KEY'),
-    model: optional('CLAUDE_MODEL', 'claude-sonnet-4-6'),
+  groq: {
+    apiKey: required('GROQ_API_KEY'),
+    baseUrl: optional('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
+    model: optional('GROQ_MODEL', 'llama-3.3-70b-versatile'),
   },
 } as const;

@@ -1,8 +1,8 @@
 # HireFire 🔥
 
 Buscador inteligente de postulaciones laborales. Cargás tu perfil y palabras clave,
-recupera ofertas de LinkedIn vía **Apify** y las rankea con **Claude** según cuánto
-encajan con tu experiencia.
+recupera ofertas de LinkedIn vía **Apify** y las rankea con **Groq (Llama 3.3 70B)**
+según cuánto encajan con tu experiencia.
 
 > Diseño detallado → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 > Obtener API keys y costos → [`docs/SETUP.md`](docs/SETUP.md)
@@ -11,20 +11,20 @@ encajan con tu experiencia.
 
 ## Stack
 
-| Capa         | Tecnología                                      |
-|--------------|-------------------------------------------------|
-| Backend      | Node.js 22 + Express + TypeScript               |
-| Base de datos| PostgreSQL 16 (local, instalado en Windows)     |
-| Datos jobs   | Apify — LinkedIn Jobs Scraper                   |
-| Matching     | Claude API `claude-sonnet-4-6` (prompt caching) |
-| Validación   | Zod                                             |
-| Frontend     | Angular 21 (standalone + signals)               |
+| Capa         | Tecnología                                          |
+|--------------|-----------------------------------------------------|
+| Backend      | Node.js 22 + Express + TypeScript                   |
+| Base de datos| PostgreSQL 16 (instalado en Windows) + Prisma ORM   |
+| Datos jobs   | Apify — LinkedIn Jobs Scraper                       |
+| Matching     | Groq API — `llama-3.3-70b-versatile` (tier gratuito)|
+| Validación   | Zod                                                 |
+| Frontend     | Angular 21 (standalone + signals)                   |
 
 ---
 
 ## Estado del proyecto
 
-- [x] **Fase 1** — Backend Express + API REST + Apify + matching con Claude
+- [x] **Fase 1** — Backend Express + API REST + Apify + matching con Groq/Llama
 - [x] **Fase 2a** — UI Angular (perfil, búsqueda, resultados rankeados)
 - [x] **Fase 2b** — Persistencia PostgreSQL + Prisma
 - [ ] **Fase 3** — Auth, historial de búsquedas, alertas por keywords
@@ -36,7 +36,7 @@ encajan con tu experiencia.
 
 - **Node.js 22+** — verificar con `node --version`
 - **PostgreSQL 16** instalado en Windows — ver paso 1 abajo
-- **API keys** de Apify y Anthropic — ver [`docs/SETUP.md`](docs/SETUP.md)
+- **API keys** de Apify y Groq — ambas tienen **tier gratuito**
 
 ---
 
@@ -46,23 +46,35 @@ encajan con tu experiencia.
 
 1. Descargar el instalador desde **https://www.postgresql.org/download/windows/**
 2. Ejecutar el installer — cuando pida password para el usuario `postgres`, anotarla.
-3. En el wizard, dejar el puerto por defecto: **5432**.
-4. Una vez instalado, abrir **pgAdmin** o **SQL Shell (psql)** y crear la base de datos:
+3. Dejar el puerto por defecto: **5432**.
+4. Una vez instalado, abrir **pgAdmin** o **SQL Shell (psql)** y crear el usuario y la base:
 
 ```sql
--- En psql o pgAdmin → Query Tool:
 CREATE USER hirefire WITH PASSWORD 'hirefire';
 CREATE DATABASE hirefire OWNER hirefire;
 ```
 
-5. Verificar que Postgres esté corriendo:
+5. Verificar que esté corriendo:
 
-```bash
-# En PowerShell:
+```powershell
 Get-Service postgresql*   # debe mostrar "Running"
 ```
 
-### 2. Configurar variables de entorno
+### 2. Obtener las API keys (ambas gratuitas)
+
+#### Apify — ofertas de LinkedIn
+1. Crear cuenta en **https://console.apify.com/sign-up**
+2. Ir a Settings → Integrations → API tokens
+3. Copiar el token (empieza con `apify_api_...`)
+4. El plan Free incluye **$5 USD de crédito mensual** — suficiente para uso personal.
+
+#### Groq — ranking inteligente
+1. Crear cuenta en **https://console.groq.com**
+2. Ir a API Keys → Create API Key
+3. Copiar la key (empieza con `gsk_...`)
+4. El tier gratuito incluye **requests generosos por minuto** — más que suficiente.
+
+### 3. Configurar variables de entorno
 
 ```bash
 cd backend
@@ -73,21 +85,23 @@ Editar `backend/.env`:
 
 ```ini
 DATABASE_URL=postgresql://hirefire:hirefire@localhost:5432/hirefire?schema=public
-APIFY_TOKEN=apify_api_...        # de https://console.apify.com/account/integrations
-ANTHROPIC_API_KEY=sk-ant-...     # de https://console.anthropic.com/settings/keys
+APIFY_TOKEN=apify_api_...    # de https://console.apify.com/account/integrations
+GROQ_API_KEY=gsk_...         # de https://console.groq.com/keys
 ```
 
-### 3. Instalar dependencias y crear las tablas
+Las demás variables ya tienen valores por defecto correctos.
+
+### 4. Instalar dependencias y crear las tablas
 
 ```bash
 cd backend
 npm install
-npm run db:push   # crea las tablas Profile y Experience
+npm run db:push
 ```
 
 Salida esperada: `Your database is now in sync with your Prisma schema.`
 
-### 4. Iniciar el backend
+### 5. Iniciar el backend
 
 ```bash
 npm run dev
@@ -95,15 +109,17 @@ npm run dev
 
 Salida esperada: `HireFire backend escuchando en http://localhost:3000`
 
-### 5. Iniciar el frontend
+### 6. Iniciar el frontend
 
 En una terminal aparte:
 
 ```bash
 cd frontend
 npm install
-npm start   # ng serve → http://localhost:4200
+npm start
 ```
+
+Abrí **http://localhost:4200** en el navegador.
 
 ---
 
@@ -116,22 +132,17 @@ curl http://localhost:3000/api/health
 # → {"status":"ok","service":"hirefire-backend"}
 ```
 
----
-
 ### Opción A — Desde la UI (recomendado)
 
-1. Abrí `http://localhost:4200` en el navegador.
-2. **Sección "1 · Tu perfil"** — completá headline, skills, experiencia y preferencias. Hacé clic en **Guardar perfil**. Aparece el badge `Guardado ✓`.
-3. **Sección "2 · Buscar ofertas"** — ingresá keywords (ej. `backend node`), ubicación y límite de resultados. Hacé clic en **Buscar**.
-4. Esperás unos segundos (Apify scrapea + Claude rankea) y aparece la lista de ofertas ordenada por **score 0–100**, con razones de match y gaps por cada una.
-
----
+1. Abrí `http://localhost:4200`.
+2. **"1 · Tu perfil"** — completá headline, skills y experiencia. Clic en **Guardar perfil** → aparece badge `Guardado ✓`.
+3. **"2 · Buscar ofertas"** — ingresá keywords (ej. `backend node`), ubicación, límite. Clic en **Buscar**.
+4. En unos segundos aparece la lista rankeada con **score 0–100**, razones de match y gaps por oferta.
 
 ### Opción B — Desde la terminal (cURL)
 
-#### Paso 1 — Crear perfil
-
 ```bash
+# Paso 1: crear perfil
 curl -X POST http://localhost:3000/api/profile \
   -H "Content-Type: application/json" \
   -d '{
@@ -139,17 +150,13 @@ curl -X POST http://localhost:3000/api/profile \
     "summary": "Especializado en Node.js y TypeScript",
     "skills": ["Node.js", "TypeScript", "Express", "PostgreSQL"],
     "experience": [
-      { "title": "Backend Dev", "company": "Acme", "description": "APIs REST con Express" }
+      { "title": "Backend Dev", "company": "Acme", "description": "APIs REST" }
     ],
     "preferences": { "locations": ["Argentina"], "remote": true }
   }'
-```
+# Guardá el "id" que devuelve
 
-Guardá el `"id"` que devuelve, lo necesitás en el siguiente paso.
-
-#### Paso 2 — Buscar y rankear
-
-```bash
+# Paso 2: buscar y rankear
 curl -X POST http://localhost:3000/api/search \
   -H "Content-Type: application/json" \
   -d '{
@@ -159,31 +166,25 @@ curl -X POST http://localhost:3000/api/search \
     "remote": true,
     "limit": 20
   }'
-```
 
-Respuesta: array de ofertas ordenadas por `score` (0–100), cada una con `reasons` y `gaps`.
-
-#### Verificar que el perfil persiste
-
-Reiniciá el backend (`Ctrl+C` y `npm run dev`) y luego:
-
-```bash
+# Verificar persistencia: reiniciá el backend y consultá el perfil
 curl http://localhost:3000/api/profile/<id-del-paso-1>
-# → debe devolver el perfil (vive en Postgres, no en memoria)
+# → devuelve el perfil (guardado en Postgres)
 ```
 
 ---
 
 ## Variables de entorno
 
-| Variable            | Requerida | Descripción                                          |
-|---------------------|-----------|------------------------------------------------------|
-| `PORT`              | No        | Puerto del servidor (default `3000`)                 |
-| `DATABASE_URL`      | **Sí**    | Cadena de conexión PostgreSQL                        |
-| `APIFY_TOKEN`       | **Sí**    | Token de Apify para scrapear ofertas                 |
-| `APIFY_JOBS_ACTOR`  | No        | Actor (default `bebity~linkedin-jobs-scraper`)       |
-| `ANTHROPIC_API_KEY` | **Sí**    | API key de Claude para el ranking                    |
-| `CLAUDE_MODEL`      | No        | Modelo (default `claude-sonnet-4-6`)                 |
+| Variable            | Requerida | Default                              | Descripción                      |
+|---------------------|-----------|--------------------------------------|----------------------------------|
+| `PORT`              | No        | `3000`                               | Puerto del servidor              |
+| `DATABASE_URL`      | **Sí**    | —                                    | Cadena de conexión PostgreSQL    |
+| `APIFY_TOKEN`       | **Sí**    | —                                    | Token de Apify                   |
+| `APIFY_JOBS_ACTOR`  | No        | `bebity~linkedin-jobs-scraper`       | Actor de LinkedIn Jobs           |
+| `GROQ_API_KEY`      | **Sí**    | —                                    | API key de Groq (gratuita)       |
+| `GROQ_BASE_URL`     | No        | `https://api.groq.com/openai/v1`     | Base URL de Groq                 |
+| `GROQ_MODEL`        | No        | `llama-3.3-70b-versatile`            | Modelo de Groq                   |
 
 ---
 
