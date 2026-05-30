@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
-import { MatchResult, SavedSearch, SearchRecord } from '../../core/models';
+import { MatchResult, ProfileAnalysis, SavedSearch, SearchRecord } from '../../core/models';
 
 function csvToArray(value: string): string[] {
   return value.split(',').map((s) => s.trim()).filter(Boolean);
@@ -112,6 +112,34 @@ export class Home {
       },
       error: (e) => { this.error.set(this.msg(e)); this.importing.set(false); },
     });
+  }
+
+  // ── Análisis de perfil ────────────────────────────────────────────────
+  readonly analyzing = signal(false);
+  readonly analysis = signal<ProfileAnalysis | null>(null);
+
+  analyzeProfile(): void {
+    const id = this.profileId();
+    if (!id) return;
+    this.analyzing.set(true);
+    this.analysis.set(null);
+    this.error.set(null);
+    this.api.analyzeProfile(id).subscribe({
+      next: (a) => { this.analysis.set(a); this.analyzing.set(false); },
+      error: (e) => { this.error.set(this.msg(e)); this.analyzing.set(false); },
+    });
+  }
+
+  priorityClass(p: string): string {
+    return p === 'alta' ? 'priority--high' : p === 'media' ? 'priority--mid' : 'priority--low';
+  }
+
+  sectionLabel(s: string): string {
+    const map: Record<string, string> = {
+      headline: 'Headline', summary: 'Resumen',
+      skills: 'Skills', experience: 'Experiencia', general: 'General',
+    };
+    return map[s] ?? s;
   }
 
   // ── Búsqueda ──────────────────────────────────────────────────────────

@@ -69,11 +69,59 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn--primary" [disabled]="savingProfile()">
-        {{ savingProfile() ? 'Guardando…' : (profileId() ? 'Actualizar perfil' : 'Guardar perfil') }}
-      </button>
+      <div class="profile-actions">
+        <button type="submit" class="btn btn--primary" [disabled]="savingProfile()">
+          {{ savingProfile() ? 'Guardando…' : (profileId() ? 'Actualizar perfil' : 'Guardar perfil') }}
+        </button>
+        @if (profileId()) {
+          <button type="button" class="btn btn--accent" [disabled]="analyzing()" (click)="analyzeProfile()">
+            {{ analyzing() ? 'Analizando…' : '🔍 Analizar perfil' }}
+          </button>
+        }
+      </div>
     </form>
   </section>
+
+  <!-- ══════════════════ ANÁLISIS DE PERFIL ══════════════════ -->
+  @if (analyzing()) {
+    <p class="muted center">Analizando tu perfil con Groq/Llama… un momento.</p>
+  }
+
+  @if (analysis(); as a) {
+    <section class="card analysis">
+      <div class="card__head">
+        <h2>Análisis de tu perfil LinkedIn</h2>
+        <div class="score-badge" [class]="scoreClass(a.score)">{{ a.score }}<span>/100</span></div>
+      </div>
+
+      @if (a.strengths.length) {
+        <div class="analysis-block">
+          <h3 class="analysis-block__title analysis-block__title--ok">✓ Puntos fuertes</h3>
+          <ul>@for (s of a.strengths; track s) { <li>{{ s }}</li> }</ul>
+        </div>
+      }
+
+      @if (a.suggestions.length) {
+        <div class="analysis-block">
+          <h3 class="analysis-block__title">Sugerencias de mejora</h3>
+          <div class="suggestions">
+            @for (sug of a.suggestions; track sug.issue) {
+              <div class="suggestion">
+                <div class="suggestion__head">
+                  <span class="tag tag--section">{{ sectionLabel(sug.section) }}</span>
+                  <span class="priority" [class]="priorityClass(sug.priority)">
+                    {{ sug.priority }}
+                  </span>
+                </div>
+                <p class="suggestion__issue">{{ sug.issue }}</p>
+                <p class="suggestion__fix">{{ sug.suggestion }}</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </section>
+  }
 
   <!-- ══════════════════ BÚSQUEDAS GUARDADAS ══════════════════ -->
   @if (saved().length > 0) {

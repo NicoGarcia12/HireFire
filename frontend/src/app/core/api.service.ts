@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   LinkedInImport,
   Profile,
+  ProfileAnalysis,
   SavedSearch,
   SearchRecord,
   SearchResponse,
@@ -45,6 +46,10 @@ export class ApiService {
 
   saveProfile(payload: ProfilePayload): Observable<Profile> {
     return this.http.post<Profile>(`${API_BASE}/profile`, payload);
+  }
+
+  analyzeProfile(profileId: string): Observable<ProfileAnalysis> {
+    return this.http.post<ProfileAnalysis>(`${API_BASE}/profile/${profileId}/analyze`, {});
   }
 
   importLinkedIn(file: File): Observable<LinkedInImport> {
