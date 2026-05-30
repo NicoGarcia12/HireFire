@@ -1,0 +1,161 @@
+<div class="page">
+  <header class="hero">
+    <h1>HireFire 🔥</h1>
+    <p>Cargá tu perfil, buscá por palabras clave y dejá que Claude rankee las ofertas.</p>
+  </header>
+
+  @if (error()) {
+    <div class="alert">{{ error() }}</div>
+  }
+
+  <!-- ===================== PASO 1: PERFIL ===================== -->
+  <section class="card">
+    <div class="card__head">
+      <h2>1 · Tu perfil</h2>
+      @if (profileId()) {
+        <span class="pill pill--ok">Guardado ✓</span>
+      }
+    </div>
+
+    <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+      <label>
+        Headline *
+        <input formControlName="headline" placeholder="Backend Developer · Node.js & TypeScript" />
+      </label>
+
+      <label>
+        Resumen
+        <textarea formControlName="summary" rows="2"
+          placeholder="Breve descripción de tu experiencia y foco profesional"></textarea>
+      </label>
+
+      <div class="grid-2">
+        <label>
+          Skills (separadas por coma)
+          <input formControlName="skills" placeholder="Node.js, TypeScript, Express, PostgreSQL" />
+        </label>
+        <label>
+          Ubicaciones preferidas (coma)
+          <input formControlName="locations" placeholder="Argentina, Remoto LATAM" />
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <label>
+          Seniority
+          <input formControlName="seniority" placeholder="Semi Senior / Senior" />
+        </label>
+        <label class="check">
+          <input type="checkbox" formControlName="remote" />
+          Preferís remoto
+        </label>
+      </div>
+
+      <div class="exp">
+        <div class="exp__head">
+          <h3>Experiencia</h3>
+          <button type="button" class="btn btn--ghost" (click)="addExperience()">+ Agregar</button>
+        </div>
+
+        <div formArrayName="experience">
+          @for (exp of experience.controls; track $index) {
+            <div class="exp__row" [formGroupName]="$index">
+              <input formControlName="title" placeholder="Puesto" />
+              <input formControlName="company" placeholder="Empresa" />
+              <input formControlName="description" placeholder="Qué hacías" />
+              <button type="button" class="btn btn--icon" (click)="removeExperience($index)"
+                [disabled]="experience.length === 1" title="Quitar">✕</button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn--primary" [disabled]="savingProfile()">
+        {{ savingProfile() ? 'Guardando…' : (profileId() ? 'Actualizar perfil' : 'Guardar perfil') }}
+      </button>
+    </form>
+  </section>
+
+  <!-- ===================== PASO 2: BÚSQUEDA ===================== -->
+  <section class="card" [class.card--disabled]="!profileId()">
+    <div class="card__head">
+      <h2>2 · Buscar ofertas</h2>
+      @if (!profileId()) {
+        <span class="pill">Guardá el perfil primero</span>
+      }
+    </div>
+
+    <form [formGroup]="searchForm" (ngSubmit)="runSearch()">
+      <label>
+        Palabras clave *
+        <input formControlName="keywords" placeholder="backend node typescript" [disabled]="!profileId()" />
+      </label>
+
+      <div class="grid-3">
+        <label>
+          Ubicación
+          <input formControlName="location" placeholder="Argentina" [disabled]="!profileId()" />
+        </label>
+        <label>
+          Cantidad
+          <input type="number" formControlName="limit" min="1" max="200" [disabled]="!profileId()" />
+        </label>
+        <label class="check">
+          <input type="checkbox" formControlName="remote" [disabled]="!profileId()" />
+          Solo remoto
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn--primary" [disabled]="!profileId() || searching()">
+        {{ searching() ? 'Buscando y rankeando…' : 'Buscar' }}
+      </button>
+    </form>
+  </section>
+
+  <!-- ===================== RESULTADOS ===================== -->
+  @if (searching()) {
+    <p class="muted">Trayendo ofertas de Apify y rankeando con Claude… esto puede tardar unos segundos.</p>
+  }
+
+  @if (results().length > 0) {
+    <section class="results">
+      <h2>Resultados ({{ results().length }})</h2>
+      @for (job of results(); track job.id) {
+        <article class="job">
+          <div class="job__head">
+            <div>
+              <h3>{{ job.title }}</h3>
+              <p class="job__meta">
+                {{ job.company }} · {{ job.location }}
+                @if (job.remote) { <span class="tag">Remoto</span> }
+              </p>
+            </div>
+            <span class="score" [class]="scoreClass(job.score)">{{ job.score }}</span>
+          </div>
+
+          @if (job.reasons.length) {
+            <div class="block">
+              <strong>Por qué encajás</strong>
+              <ul>
+                @for (r of job.reasons; track r) { <li>{{ r }}</li> }
+              </ul>
+            </div>
+          }
+
+          @if (job.gaps.length) {
+            <div class="block block--gaps">
+              <strong>Qué te falta</strong>
+              <ul>
+                @for (g of job.gaps; track g) { <li>{{ g }}</li> }
+              </ul>
+            </div>
+          }
+
+          @if (job.url) {
+            <a class="btn btn--link" [href]="job.url" target="_blank" rel="noopener">Ver oferta ↗</a>
+          }
+        </article>
+      }
+    </section>
+  }
+</div>

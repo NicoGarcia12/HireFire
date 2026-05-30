@@ -22,7 +22,8 @@ semánticamente** contra tu perfil usando la **API de Claude**.
 ## Estado
 
 - [x] **Fase 1 — MVP backend**: API REST, integración Apify, matching con Claude
-- [ ] **Fase 2 — UI Angular** + persistencia PostgreSQL/Prisma
+- [x] **Fase 2a — UI Angular**: perfil + búsqueda + resultados rankeados
+- [ ] **Fase 2b — Persistencia PostgreSQL/Prisma**
 - [ ] **Fase 3 — Auth, historial, alertas**
 - [ ] **Fase 4 — Importador del export de LinkedIn**
 
@@ -36,6 +37,20 @@ cp .env.example .env   # completar APIFY_TOKEN y ANTHROPIC_API_KEY
 npm install
 npm run dev
 ```
+
+## Puesta en marcha (frontend Angular)
+
+```bash
+cd frontend
+npm install
+npm start            # ng serve → http://localhost:4200
+```
+
+> El backend debe estar corriendo en `:3000` (el front pega directo vía CORS).
+> Flujo en la UI: **1)** cargás tu perfil → **2)** buscás por keywords → ves las ofertas
+> rankeadas con su score, razones de match y gaps.
+
+---
 
 ### Variables de entorno
 
