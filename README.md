@@ -5,20 +5,20 @@ recupera ofertas de LinkedIn vía **Apify** y las rankea con **Groq (Llama 3.3 7
 según cuánto encajan con tu experiencia.
 
 > Diseño detallado → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-> Obtener API keys y costos → [`docs/SETUP.md`](docs/SETUP.md)
+> Keys y costos → [`docs/SETUP.md`](docs/SETUP.md)
 
 ---
 
 ## Stack
 
-| Capa         | Tecnología                                          |
-|--------------|-----------------------------------------------------|
-| Backend      | Node.js 22 + Express + TypeScript                   |
-| Base de datos| PostgreSQL 16 (instalado en Windows) + Prisma ORM   |
-| Datos jobs   | Apify — LinkedIn Jobs Scraper                       |
-| Matching     | Groq API — `llama-3.3-70b-versatile` (tier gratuito)|
-| Validación   | Zod                                                 |
-| Frontend     | Angular 21 (standalone + signals)                   |
+| Capa          | Tecnología                                          |
+|---------------|-----------------------------------------------------|
+| Backend       | Node.js 22 + Express + TypeScript                   |
+| Base de datos | PostgreSQL 16 + Prisma ORM                          |
+| Datos jobs    | Apify — LinkedIn Jobs Scraper                       |
+| Matching      | Groq API — `llama-3.3-70b-versatile` (tier gratuito)|
+| Validación    | Zod                                                 |
+| Frontend      | Angular 21 (standalone + signals)                   |
 
 ---
 
@@ -34,64 +34,109 @@ según cuánto encajan con tu experiencia.
 
 ## Prerequisitos
 
-- **Node.js 22+** — verificar con `node --version`
-- **PostgreSQL 16** instalado en Windows — ver paso 1 abajo
-- **API keys** de Apify y Groq — ambas tienen **tier gratuito**
+Antes de empezar, asegurate de tener instalado:
+
+- **Git** — `git --version`
+- **Node.js 22+** — `node --version` (recomendado instalar via [nvm](https://github.com/nvm-sh/nvm))
+- **PostgreSQL 16** — ver paso 1 abajo
+- **Cuentas gratuitas** en Apify y Groq — ver paso 3 abajo
 
 ---
 
-## Cómo levantar todo
+## Instalación y puesta en marcha
 
-### 1. Instalar PostgreSQL en Windows (solo la primera vez)
+### Paso 1 — Instalar PostgreSQL
 
-1. Descargar el instalador desde **https://www.postgresql.org/download/windows/**
-2. Ejecutar el installer — cuando pida password para el usuario `postgres`, anotarla.
-3. Dejar el puerto por defecto: **5432**.
-4. Una vez instalado, abrir **pgAdmin** o **SQL Shell (psql)** y crear el usuario y la base:
+**Linux (Ubuntu/Debian)**
+```bash
+sudo apt update
+sudo apt install -y postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql   # para que arranque con el sistema
+```
 
+**Windows**
+Descargar el installer desde https://www.postgresql.org/download/windows/ e instalarlo dejando el puerto por defecto (5432).
+
+---
+
+Crear el usuario y la base de datos (igual en ambos sistemas):
+
+**Linux**
+```bash
+sudo -u postgres psql -c "CREATE USER hirefire WITH PASSWORD 'hirefire';"
+sudo -u postgres psql -c "CREATE DATABASE hirefire OWNER hirefire;"
+```
+
+**Windows** — abrir **SQL Shell (psql)** o **pgAdmin → Query Tool**:
 ```sql
 CREATE USER hirefire WITH PASSWORD 'hirefire';
 CREATE DATABASE hirefire OWNER hirefire;
 ```
 
-5. Verificar que esté corriendo:
+Verificar que Postgres esté corriendo:
+```bash
+# Linux
+sudo systemctl status postgresql
 
-```powershell
-Get-Service postgresql*   # debe mostrar "Running"
+# Windows (PowerShell)
+Get-Service postgresql*
 ```
 
-### 2. Obtener las API keys (ambas gratuitas)
+---
 
-#### Apify — ofertas de LinkedIn
-1. Crear cuenta en **https://console.apify.com/sign-up**
-2. Ir a Settings → Integrations → API tokens
+### Paso 2 — Clonar el repositorio
+
+```bash
+git clone git@github.com:NicoGarcia12/HireFire.git
+cd HireFire
+```
+
+---
+
+### Paso 3 — Obtener las API keys (ambas gratuitas)
+
+#### Apify — datos de ofertas de LinkedIn
+1. Crear cuenta en https://console.apify.com/sign-up
+2. Ir a **Settings → Integrations → API tokens**
 3. Copiar el token (empieza con `apify_api_...`)
-4. El plan Free incluye **$5 USD de crédito mensual** — suficiente para uso personal.
+> El plan Free incluye $5 USD de crédito mensual, suficiente para uso personal.
 
-#### Groq — ranking inteligente
-1. Crear cuenta en **https://console.groq.com**
-2. Ir a API Keys → Create API Key
+#### Groq — ranking inteligente con IA
+1. Crear cuenta en https://console.groq.com
+2. Ir a **API Keys → Create API Key**
 3. Copiar la key (empieza con `gsk_...`)
-4. El tier gratuito incluye **requests generosos por minuto** — más que suficiente.
+> El tier gratuito tiene límites de requests por minuto más que suficientes.
 
-### 3. Configurar variables de entorno
+---
+
+### Paso 4 — Configurar variables de entorno
 
 ```bash
 cd backend
-copy .env.example .env
+cp .env.example .env
 ```
 
-Editar `backend/.env`:
+Editar `backend/.env` y completar las tres líneas marcadas:
 
 ```ini
+# Base de datos (ya creada en Paso 1)
 DATABASE_URL=postgresql://hirefire:hirefire@localhost:5432/hirefire?schema=public
-APIFY_TOKEN=apify_api_...    # de https://console.apify.com/account/integrations
-GROQ_API_KEY=gsk_...         # de https://console.groq.com/keys
+
+# Apify (obtenida en Paso 3)
+APIFY_TOKEN=apify_api_...
+
+# Groq (obtenida en Paso 3)
+GROQ_API_KEY=gsk_...
 ```
 
-Las demás variables ya tienen valores por defecto correctos.
+El resto de variables tienen valores por defecto y no hace falta tocarlos.
 
-### 4. Instalar dependencias y crear las tablas
+> ⚠️ `.env` está en `.gitignore` — nunca se sube al repositorio.
+
+---
+
+### Paso 5 — Instalar dependencias y crear las tablas
 
 ```bash
 cd backend
@@ -99,9 +144,11 @@ npm install
 npm run db:push
 ```
 
-Salida esperada: `Your database is now in sync with your Prisma schema.`
+Salida esperada al final: `Your database is now in sync with your Prisma schema.`
 
-### 5. Iniciar el backend
+---
+
+### Paso 6 — Iniciar el backend
 
 ```bash
 npm run dev
@@ -109,9 +156,11 @@ npm run dev
 
 Salida esperada: `HireFire backend escuchando en http://localhost:3000`
 
-### 6. Iniciar el frontend
+---
 
-En una terminal aparte:
+### Paso 7 — Iniciar el frontend
+
+Abrir una **segunda terminal** en la raíz del repo:
 
 ```bash
 cd frontend
@@ -119,30 +168,36 @@ npm install
 npm start
 ```
 
-Abrí **http://localhost:4200** en el navegador.
+Salida esperada: `Local: http://localhost:4200`
+
+Abrir **http://localhost:4200** en el navegador.
 
 ---
 
-## Cómo probar lo construido hasta ahora
+## Cómo probar
 
-### Verificación rápida — healthcheck
+### Verificación rápida
 
 ```bash
 curl http://localhost:3000/api/health
 # → {"status":"ok","service":"hirefire-backend"}
 ```
 
-### Opción A — Desde la UI (recomendado)
+---
+
+### Desde la UI (recomendado)
 
 1. Abrí `http://localhost:4200`.
 2. **"1 · Tu perfil"** — completá headline, skills y experiencia. Clic en **Guardar perfil** → aparece badge `Guardado ✓`.
-3. **"2 · Buscar ofertas"** — ingresá keywords (ej. `backend node`), ubicación, límite. Clic en **Buscar**.
+3. **"2 · Buscar ofertas"** — ingresá keywords (ej. `backend node`), ubicación y cantidad. Clic en **Buscar**.
 4. En unos segundos aparece la lista rankeada con **score 0–100**, razones de match y gaps por oferta.
 
-### Opción B — Desde la terminal (cURL)
+---
+
+### Desde la terminal (cURL)
 
 ```bash
-# Paso 1: crear perfil
+# 1) Crear perfil
 curl -X POST http://localhost:3000/api/profile \
   -H "Content-Type: application/json" \
   -d '{
@@ -154,9 +209,9 @@ curl -X POST http://localhost:3000/api/profile \
     ],
     "preferences": { "locations": ["Argentina"], "remote": true }
   }'
-# Guardá el "id" que devuelve
+# → guarda el "id" que devuelve
 
-# Paso 2: buscar y rankear
+# 2) Buscar y rankear
 curl -X POST http://localhost:3000/api/search \
   -H "Content-Type: application/json" \
   -d '{
@@ -167,24 +222,24 @@ curl -X POST http://localhost:3000/api/search \
     "limit": 20
   }'
 
-# Verificar persistencia: reiniciá el backend y consultá el perfil
+# 3) Verificar persistencia (reiniciá el backend primero)
 curl http://localhost:3000/api/profile/<id-del-paso-1>
-# → devuelve el perfil (guardado en Postgres)
+# → devuelve el perfil (guardado en Postgres, no en memoria)
 ```
 
 ---
 
 ## Variables de entorno
 
-| Variable            | Requerida | Default                              | Descripción                      |
-|---------------------|-----------|--------------------------------------|----------------------------------|
-| `PORT`              | No        | `3000`                               | Puerto del servidor              |
-| `DATABASE_URL`      | **Sí**    | —                                    | Cadena de conexión PostgreSQL    |
-| `APIFY_TOKEN`       | **Sí**    | —                                    | Token de Apify                   |
-| `APIFY_JOBS_ACTOR`  | No        | `bebity~linkedin-jobs-scraper`       | Actor de LinkedIn Jobs           |
-| `GROQ_API_KEY`      | **Sí**    | —                                    | API key de Groq (gratuita)       |
-| `GROQ_BASE_URL`     | No        | `https://api.groq.com/openai/v1`     | Base URL de Groq                 |
-| `GROQ_MODEL`        | No        | `llama-3.3-70b-versatile`            | Modelo de Groq                   |
+| Variable            | Requerida | Default                          | Descripción                     |
+|---------------------|-----------|----------------------------------|---------------------------------|
+| `PORT`              | No        | `3000`                           | Puerto del servidor             |
+| `DATABASE_URL`      | **Sí**    | —                                | Cadena de conexión PostgreSQL   |
+| `APIFY_TOKEN`       | **Sí**    | —                                | Token de Apify                  |
+| `APIFY_JOBS_ACTOR`  | No        | `bebity~linkedin-jobs-scraper`   | Actor de LinkedIn Jobs          |
+| `GROQ_API_KEY`      | **Sí**    | —                                | API key de Groq                 |
+| `GROQ_BASE_URL`     | No        | `https://api.groq.com/openai/v1` | Base URL de Groq                |
+| `GROQ_MODEL`        | No        | `llama-3.3-70b-versatile`        | Modelo de Groq                  |
 
 ---
 
