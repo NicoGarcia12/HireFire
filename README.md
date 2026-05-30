@@ -5,6 +5,7 @@ Buscador inteligente de postulaciones laborales. A partir de tu **perfil** y un 
 semánticamente** contra tu perfil usando la **API de Claude**.
 
 > Diseño completo en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+> Configuración de keys y costos en [`docs/SETUP.md`](docs/SETUP.md).
 
 ---
 
