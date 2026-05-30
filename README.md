@@ -1,121 +1,203 @@
 # HireFire 🔥
 
-Buscador inteligente de postulaciones laborales. A partir de tu **perfil** y un set de
-**palabras clave**, recupera ofertas de LinkedIn (vía **Apify**) y las **rankea
-semánticamente** contra tu perfil usando la **API de Claude**.
+Buscador inteligente de postulaciones laborales. Cargás tu perfil y palabras clave,
+recupera ofertas de LinkedIn vía **Apify** y las rankea con **Claude** según cuánto
+encajan con tu experiencia.
 
-> Diseño completo en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-> Configuración de keys y costos en [`docs/SETUP.md`](docs/SETUP.md).
+> Diseño detallado → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+> Obtener API keys y costos → [`docs/SETUP.md`](docs/SETUP.md)
 
 ---
 
 ## Stack
 
-- **Backend**: Node.js + Express + TypeScript
-- **Datos de ofertas**: Apify (LinkedIn Jobs Scraper)
-- **Matching**: Claude API (`claude-sonnet-4-6`) con prompt caching del perfil
-- **Validación**: Zod
-- **Frontend** (Fase 2): Angular (standalone + signals)
+| Capa         | Tecnología                                      |
+|--------------|-------------------------------------------------|
+| Backend      | Node.js 22 + Express + TypeScript               |
+| Base de datos| PostgreSQL 16 (Docker) + Prisma ORM             |
+| Datos jobs   | Apify — LinkedIn Jobs Scraper                   |
+| Matching     | Claude API `claude-sonnet-4-6` (prompt caching) |
+| Validación   | Zod                                             |
+| Frontend     | Angular 21 (standalone + signals)               |
 
 ---
 
-## Estado
+## Estado del proyecto
 
-- [x] **Fase 1 — MVP backend**: API REST, integración Apify, matching con Claude
-- [x] **Fase 2a — UI Angular**: perfil + búsqueda + resultados rankeados
-- [x] **Fase 2b — Persistencia PostgreSQL/Prisma**: el perfil ya no se pierde al reiniciar
-- [ ] **Fase 3 — Auth, historial, alertas**
-- [ ] **Fase 4 — Importador del export de LinkedIn**
+- [x] **Fase 1** — Backend Express + API REST + Apify + matching con Claude
+- [x] **Fase 2a** — UI Angular (perfil, búsqueda, resultados rankeados)
+- [x] **Fase 2b** — Persistencia PostgreSQL + Prisma
+- [ ] **Fase 3** — Auth, historial de búsquedas, alertas por keywords
+- [ ] **Fase 4** — Importador del export ZIP de LinkedIn
 
 ---
 
-## Puesta en marcha (backend)
+## Prerequisitos
+
+- **Node.js 22+** (`node --version`)
+- **Docker Desktop** corriendo (`docker --version`)
+- **API keys** de Apify y Anthropic — ver [`docs/SETUP.md`](docs/SETUP.md) para obtenerlas
+
+---
+
+## Cómo levantar todo
+
+### 1. Clonar y configurar variables de entorno
 
 ```bash
-# 1) Levantar PostgreSQL (desde la raíz del repo)
-docker compose up -d
+git clone git@github.com:NicoGarcia12/HireFire.git
+cd HireFire
 
-# 2) Backend
 cd backend
-cp .env.example .env       # completar APIFY_TOKEN y ANTHROPIC_API_KEY
+copy .env.example .env   # Windows CMD/PowerShell
+# cp .env.example .env   # bash/Git Bash
+```
+
+Editar `backend/.env` y completar:
+
+```ini
+DATABASE_URL=postgresql://hirefire:hirefire@localhost:5432/hirefire?schema=public
+APIFY_TOKEN=apify_api_...        # de https://console.apify.com/account/integrations
+ANTHROPIC_API_KEY=sk-ant-...     # de https://console.anthropic.com/settings/keys
+```
+
+### 2. Levantar la base de datos
+
+```bash
+# Desde la raíz del repo
+docker compose up -d
+```
+
+Verificar que esté sana:
+
+```bash
+docker ps   # debe mostrar hirefire-postgres con estado "healthy"
+```
+
+### 3. Instalar dependencias y crear las tablas
+
+```bash
+cd backend
 npm install
-npm run db:push            # crea las tablas en la DB (o: npm run prisma:migrate)
+npm run db:push   # crea las tablas Profile y Experience en Postgres
+```
+
+Salida esperada: `Your database is now in sync with your Prisma schema.`
+
+### 4. Iniciar el backend
+
+```bash
 npm run dev
 ```
 
-> La base corre con `docker-compose.yml` (Postgres 16). El `DATABASE_URL` del
-> `.env.example` ya apunta a ese contenedor (`hirefire:hirefire@localhost:5432`).
+Salida esperada: `HireFire backend escuchando en http://localhost:3000`
 
-## Puesta en marcha (frontend Angular)
+### 5. Iniciar el frontend
+
+En una terminal aparte:
 
 ```bash
 cd frontend
 npm install
-npm start            # ng serve → http://localhost:4200
+npm start   # ng serve → http://localhost:4200
 ```
 
-> El backend debe estar corriendo en `:3000` (el front pega directo vía CORS).
-> Flujo en la UI: **1)** cargás tu perfil → **2)** buscás por keywords → ves las ofertas
-> rankeadas con su score, razones de match y gaps.
-
 ---
 
-### Variables de entorno
+## Cómo probar lo construido hasta ahora
 
-| Variable            | Descripción                                   |
-|---------------------|-----------------------------------------------|
-| `PORT`              | Puerto del servidor (default 3000)            |
-| `DATABASE_URL`      | Cadena de conexión PostgreSQL (Prisma)        |
-| `APIFY_TOKEN`       | Token de Apify                                |
-| `APIFY_JOBS_ACTOR`  | Actor de jobs (default `bebity~linkedin-jobs-scraper`) |
-| `ANTHROPIC_API_KEY` | API key de Claude                             |
-| `CLAUDE_MODEL`      | Modelo (default `claude-sonnet-4-6`)          |
-
----
-
-## API
-
-| Método | Ruta                | Descripción                              |
-|--------|---------------------|------------------------------------------|
-| GET    | `/api/health`       | Healthcheck                              |
-| POST   | `/api/profile`      | Carga/actualiza el perfil                |
-| GET    | `/api/profile/:id`  | Devuelve el perfil                       |
-| POST   | `/api/jobs/search`  | Busca ofertas en Apify (sin ranking)     |
-| POST   | `/api/search`       | Busca + rankea contra el perfil (full)   |
-
-### Ejemplo — flujo completo
+### Verificación rápida — healthcheck
 
 ```bash
-# 1) Crear perfil
+curl http://localhost:3000/api/health
+# → {"status":"ok","service":"hirefire-backend"}
+```
+
+---
+
+### Opción A — Desde la UI (recomendado)
+
+1. Abrí `http://localhost:4200` en el navegador.
+2. **Sección "1 · Tu perfil"** — completá headline, skills, experiencia y preferencias. Hacé clic en **Guardar perfil**. Aparece el badge `Guardado ✓`.
+3. **Sección "2 · Buscar ofertas"** — ingresá keywords (ej. `backend node`), ubicación y límite de resultados. Hacé clic en **Buscar**.
+4. Esperás unos segundos (Apify scrapea + Claude rankea) y aparece la lista de ofertas ordenada por **score 0–100**, con razones de match y gaps por cada una.
+
+---
+
+### Opción B — Desde la terminal (cURL)
+
+#### Paso 1 — Crear perfil
+
+```bash
 curl -X POST http://localhost:3000/api/profile \
-  -H 'Content-Type: application/json' \
+  -H "Content-Type: application/json" \
   -d '{
-    "headline": "Backend Developer",
+    "headline": "Backend Developer Node.js",
     "summary": "Especializado en Node.js y TypeScript",
     "skills": ["Node.js", "TypeScript", "Express", "PostgreSQL"],
     "experience": [
-      { "title": "Backend Dev", "company": "Acme", "description": "APIs REST" }
+      { "title": "Backend Dev", "company": "Acme", "description": "APIs REST con Express" }
     ],
     "preferences": { "locations": ["Argentina"], "remote": true }
   }'
-# → devuelve { "id": "...", ... }
+```
 
-# 2) Buscar + rankear
+Guardá el `"id"` que devuelve, lo necesitás en el siguiente paso.
+
+#### Paso 2 — Buscar y rankear
+
+```bash
 curl -X POST http://localhost:3000/api/search \
-  -H 'Content-Type: application/json' \
+  -H "Content-Type: application/json" \
   -d '{
     "profileId": "<id-del-paso-1>",
     "keywords": "backend node typescript",
     "location": "Argentina",
     "remote": true,
-    "limit": 30
+    "limit": 20
   }'
 ```
+
+Respuesta: array de ofertas ordenadas por `score` (0–100), cada una con `reasons` y `gaps`.
+
+#### Verificar que el perfil persiste
+
+Reiniciá el backend (`Ctrl+C` y `npm run dev`) y luego:
+
+```bash
+curl http://localhost:3000/api/profile/<id-del-paso-1>
+# → debe devolver el perfil (vive en Postgres, no en memoria)
+```
+
+---
+
+## Variables de entorno
+
+| Variable            | Requerida | Descripción                                          |
+|---------------------|-----------|------------------------------------------------------|
+| `PORT`              | No        | Puerto del servidor (default `3000`)                 |
+| `DATABASE_URL`      | **Sí**    | Cadena de conexión PostgreSQL                        |
+| `APIFY_TOKEN`       | **Sí**    | Token de Apify para scrapear ofertas                 |
+| `APIFY_JOBS_ACTOR`  | No        | Actor (default `bebity~linkedin-jobs-scraper`)       |
+| `ANTHROPIC_API_KEY` | **Sí**    | API key de Claude para el ranking                    |
+| `CLAUDE_MODEL`      | No        | Modelo (default `claude-sonnet-4-6`)                 |
+
+---
+
+## Endpoints de la API
+
+| Método | Ruta                | Descripción                                       |
+|--------|---------------------|---------------------------------------------------|
+| GET    | `/api/health`       | Healthcheck                                       |
+| POST   | `/api/profile`      | Crea o actualiza el perfil (persiste en Postgres) |
+| GET    | `/api/profile/:id`  | Devuelve el perfil por id                         |
+| POST   | `/api/jobs/search`  | Busca ofertas en Apify sin rankear                |
+| POST   | `/api/search`       | Busca + rankea contra el perfil (flujo completo)  |
 
 ---
 
 ## Notas legales
 
-- No se usa la API oficial de LinkedIn (restringida a partners enterprise).
+- No se usa la API oficial de LinkedIn (restringida a partners enterprise, $10k+/año).
 - Apify scrapea **datos públicos** de ofertas. Uso personal y razonable.
-- El perfil propio se carga manualmente o desde tu propio export de datos de LinkedIn.
+- El perfil se carga manualmente; en Fase 4 se agregará el importador del export propio de LinkedIn.
