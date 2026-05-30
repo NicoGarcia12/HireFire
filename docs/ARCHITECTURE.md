@@ -27,7 +27,7 @@
 | Matching    | Claude API (`@anthropic-ai/sdk`)             |
 | Validación  | Zod                                          |
 | Frontend    | Angular (standalone components + signals)    |
-| Persistencia| PostgreSQL + Prisma (perfiles) — vía `docker-compose.yml` |
+| Persistencia| PostgreSQL 16 (instalado en Windows) + Prisma ORM          |
 
 ---
 
@@ -156,7 +156,7 @@ CLAUDE_MODEL=claude-sonnet-4-6
 
 ## 8b. Persistencia (Prisma)
 
-- Postgres local vía `docker-compose.yml` (raíz del repo).
+- Postgres 16 instalado directamente en Windows (sin Docker).
 - Schema en `backend/prisma/schema.prisma`: modelos `Profile` y `Experience`
   (relación 1‑N con borrado en cascada).
 - Cliente Prisma singleton en `config/db.ts` (reutilizado en dev para no agotar el pool).

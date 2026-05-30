@@ -14,7 +14,7 @@ encajan con tu experiencia.
 | Capa         | Tecnología                                      |
 |--------------|-------------------------------------------------|
 | Backend      | Node.js 22 + Express + TypeScript               |
-| Base de datos| PostgreSQL 16 (Docker) + Prisma ORM             |
+| Base de datos| PostgreSQL 16 (local, instalado en Windows)     |
 | Datos jobs   | Apify — LinkedIn Jobs Scraper                   |
 | Matching     | Claude API `claude-sonnet-4-6` (prompt caching) |
 | Validación   | Zod                                             |
@@ -34,26 +34,42 @@ encajan con tu experiencia.
 
 ## Prerequisitos
 
-- **Node.js 22+** (`node --version`)
-- **Docker Desktop** corriendo (`docker --version`)
-- **API keys** de Apify y Anthropic — ver [`docs/SETUP.md`](docs/SETUP.md) para obtenerlas
+- **Node.js 22+** — verificar con `node --version`
+- **PostgreSQL 16** instalado en Windows — ver paso 1 abajo
+- **API keys** de Apify y Anthropic — ver [`docs/SETUP.md`](docs/SETUP.md)
 
 ---
 
 ## Cómo levantar todo
 
-### 1. Clonar y configurar variables de entorno
+### 1. Instalar PostgreSQL en Windows (solo la primera vez)
 
-```bash
-git clone git@github.com:NicoGarcia12/HireFire.git
-cd HireFire
+1. Descargar el instalador desde **https://www.postgresql.org/download/windows/**
+2. Ejecutar el installer — cuando pida password para el usuario `postgres`, anotarla.
+3. En el wizard, dejar el puerto por defecto: **5432**.
+4. Una vez instalado, abrir **pgAdmin** o **SQL Shell (psql)** y crear la base de datos:
 
-cd backend
-copy .env.example .env   # Windows CMD/PowerShell
-# cp .env.example .env   # bash/Git Bash
+```sql
+-- En psql o pgAdmin → Query Tool:
+CREATE USER hirefire WITH PASSWORD 'hirefire';
+CREATE DATABASE hirefire OWNER hirefire;
 ```
 
-Editar `backend/.env` y completar:
+5. Verificar que Postgres esté corriendo:
+
+```bash
+# En PowerShell:
+Get-Service postgresql*   # debe mostrar "Running"
+```
+
+### 2. Configurar variables de entorno
+
+```bash
+cd backend
+copy .env.example .env
+```
+
+Editar `backend/.env`:
 
 ```ini
 DATABASE_URL=postgresql://hirefire:hirefire@localhost:5432/hirefire?schema=public
@@ -61,25 +77,12 @@ APIFY_TOKEN=apify_api_...        # de https://console.apify.com/account/integrat
 ANTHROPIC_API_KEY=sk-ant-...     # de https://console.anthropic.com/settings/keys
 ```
 
-### 2. Levantar la base de datos
-
-```bash
-# Desde la raíz del repo
-docker compose up -d
-```
-
-Verificar que esté sana:
-
-```bash
-docker ps   # debe mostrar hirefire-postgres con estado "healthy"
-```
-
 ### 3. Instalar dependencias y crear las tablas
 
 ```bash
 cd backend
 npm install
-npm run db:push   # crea las tablas Profile y Experience en Postgres
+npm run db:push   # crea las tablas Profile y Experience
 ```
 
 Salida esperada: `Your database is now in sync with your Prisma schema.`
