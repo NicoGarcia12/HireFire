@@ -38,7 +38,7 @@ Antes de empezar, asegurate de tener instalado:
 
 - **Git** — `git --version`
 - **Node.js 22+** — `node --version` (recomendado instalar via [nvm](https://github.com/nvm-sh/nvm))
-- **PostgreSQL 16** — ver paso 1 abajo
+- **PostgreSQL 16+** — ver paso 1 abajo
 - **Cuentas gratuitas** en Apify y Groq — ver paso 3 abajo
 
 ---
