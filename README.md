@@ -13,7 +13,7 @@ según cuánto encajan con tu experiencia.
 
 | Capa          | Tecnología                                          |
 |---------------|-----------------------------------------------------|
-| Backend       | Node.js 22 + Express + TypeScript                   |
+| Backend       | Node.js 22 recomendado (`.nvmrc`: `22.22.2`) + Express + TypeScript |
 | Base de datos | PostgreSQL 16 + Prisma ORM                          |
 | Datos jobs    | Apify — LinkedIn Jobs Scraper                       |
 | Matching      | Groq API — `llama-3.3-70b-versatile` (tier gratuito)|
@@ -27,7 +27,7 @@ según cuánto encajan con tu experiencia.
 - [x] **Fase 1** — Backend Express + API REST + Apify + matching con Groq/Llama
 - [x] **Fase 2a** — UI Angular (perfil, búsqueda, resultados rankeados)
 - [x] **Fase 2b** — Persistencia PostgreSQL + Prisma
-- [x] **Fase 3** — Historial de búsquedas + búsquedas guardadas (alertas)
+- [x] **Fase 3** — Historial de búsquedas + búsquedas guardadas para re-ejecutar
 - [x] **Fase 4** — Importador del export ZIP de LinkedIn → auto-fill del perfil
 
 ---
@@ -37,7 +37,7 @@ según cuánto encajan con tu experiencia.
 Antes de empezar, asegurate de tener instalado:
 
 - **Git** — `git --version`
-- **Node.js 22+** — `node --version` (recomendado instalar via [nvm](https://github.com/nvm-sh/nvm))
+- **Node.js 22 recomendado** — `node --version` (el repo está pinneado con `.nvmrc` en `22.22.2`; recomendado usar [nvm](https://github.com/nvm-sh/nvm))
 - **PostgreSQL 16+** — ver paso 1 abajo
 - **Cuentas gratuitas** en Apify y Groq — ver paso 3 abajo
 
@@ -90,6 +90,7 @@ Get-Service postgresql*
 ```bash
 git clone git@github.com:NicoGarcia12/HireFire.git
 cd HireFire
+nvm use
 ```
 
 ---
@@ -140,7 +141,7 @@ El resto de variables tienen valores por defecto y no hace falta tocarlos.
 
 ```bash
 cd backend
-npm install
+npm ci
 npm run db:push
 ```
 
@@ -164,13 +165,21 @@ Abrir una **segunda terminal** en la raíz del repo:
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm start
 ```
 
 Salida esperada: `Local: http://localhost:4200`
 
 Abrir **http://localhost:4200** en el navegador.
+
+Si el puerto `4200` está ocupado en tu entorno:
+
+```bash
+npm start -- --port 4201
+```
+
+En ese caso, abrí **http://localhost:4201**.
 
 ---
 
@@ -193,6 +202,26 @@ Abrir **http://localhost:4200** en el navegador.
 ```bash
 curl http://localhost:3000/api/health
 # → {"status":"ok","service":"hirefire-backend"}
+```
+
+Smoke útil de persistencia real:
+
+```bash
+# 1) Crear perfil
+curl -X POST http://localhost:3000/api/profile \
+  -H "Content-Type: application/json" \
+  -d '{
+    "headline": "Backend Developer Node.js",
+    "summary": "Especializado en Node.js y TypeScript",
+    "skills": ["Node.js", "TypeScript", "Express", "PostgreSQL"],
+    "experience": [
+      { "title": "Backend Dev", "company": "Acme", "description": "APIs REST" }
+    ],
+    "preferences": { "locations": ["Argentina"], "remote": true }
+  }'
+
+# 2) Leer el perfil persistido usando el id devuelto por el POST
+curl http://localhost:3000/api/profile/<id>
 ```
 
 ---
@@ -248,7 +277,7 @@ curl http://localhost:3000/api/profile/<id-del-paso-1>
 | `PORT`              | No        | `3000`                           | Puerto del servidor             |
 | `DATABASE_URL`      | **Sí**    | —                                | Cadena de conexión PostgreSQL   |
 | `APIFY_TOKEN`       | **Sí**    | —                                | Token de Apify                  |
-| `APIFY_JOBS_ACTOR`  | No        | `bebity~linkedin-jobs-scraper`   | Actor de LinkedIn Jobs          |
+| `APIFY_JOBS_ACTOR`  | No        | `curious_coder/linkedin-jobs-scraper` | Actor de LinkedIn Jobs     |
 | `GROQ_API_KEY`      | **Sí**    | —                                | API key de Groq                 |
 | `GROQ_BASE_URL`     | No        | `https://api.groq.com/openai/v1` | Base URL de Groq                |
 | `GROQ_MODEL`        | No        | `llama-3.3-70b-versatile`        | Modelo de Groq                  |
@@ -257,13 +286,20 @@ curl http://localhost:3000/api/profile/<id-del-paso-1>
 
 ## Endpoints de la API
 
-| Método | Ruta                | Descripción                                       |
-|--------|---------------------|---------------------------------------------------|
-| GET    | `/api/health`       | Healthcheck                                       |
-| POST   | `/api/profile`      | Crea o actualiza el perfil (persiste en Postgres) |
-| GET    | `/api/profile/:id`  | Devuelve el perfil por id                         |
-| POST   | `/api/jobs/search`  | Busca ofertas en Apify sin rankear                |
-| POST   | `/api/search`       | Busca + rankea contra el perfil (flujo completo)  |
+| Método | Ruta                         | Descripción                                                     |
+|--------|------------------------------|-----------------------------------------------------------------|
+| GET    | `/api/health`                | Healthcheck                                                     |
+| POST   | `/api/profile`               | Crea o actualiza el perfil (persiste en Postgres)               |
+| GET    | `/api/profile/:id`           | Devuelve el perfil por id                                       |
+| POST   | `/api/profile/:id/analyze`   | Analiza el perfil con Groq y devuelve fortalezas/sugerencias    |
+| POST   | `/api/profile/import-linkedin` | Importa un ZIP de LinkedIn y devuelve datos parseados         |
+| POST   | `/api/jobs/search`           | Busca ofertas en Apify sin rankear                              |
+| POST   | `/api/search`                | Busca + rankea contra el perfil y guarda historial              |
+| GET    | `/api/history?profileId=...` | Lista el historial de búsquedas de un perfil                    |
+| DELETE | `/api/history/:id`           | Elimina un registro del historial                               |
+| GET    | `/api/saved-searches?profileId=...` | Lista búsquedas guardadas                                 |
+| POST   | `/api/saved-searches`        | Guarda una búsqueda reutilizable                                |
+| DELETE | `/api/saved-searches/:id`    | Elimina una búsqueda guardada                                   |
 
 ---
 
@@ -271,4 +307,4 @@ curl http://localhost:3000/api/profile/<id-del-paso-1>
 
 - No se usa la API oficial de LinkedIn (restringida a partners enterprise, $10k+/año).
 - Apify scrapea **datos públicos** de ofertas. Uso personal y razonable.
-- El perfil se carga manualmente; en Fase 4 se agregará el importador del export propio de LinkedIn.
+- El perfil puede cargarse manualmente o importarse desde tu propio export ZIP de LinkedIn.

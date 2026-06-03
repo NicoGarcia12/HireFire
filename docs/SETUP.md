@@ -1,20 +1,22 @@
 # HireFire — Instructivo de configuración y costos
 
-Guía paso a paso para obtener las dos API keys, dónde ponerlas, y cuánto cuesta cada búsqueda.
+Guía paso a paso para preparar el entorno, obtener las credenciales externas y validar que el backend pueda arrancar.
+
+> Runtime validado con **Node 22**. El repo incluye `.nvmrc` pinneado en `22.22.2`.
 
 ---
 
-## 1. Las dos llaves que necesitás
+## 1. Variables mínimas que necesitás
 
-HireFire usa **dos servicios externos de pago por uso**. Sin ellos el backend arranca
-pero rechaza el inicio pidiendo las variables.
+El backend falla al iniciar si faltan variables obligatorias. Hoy las mínimas son:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      backend/.env                            │
 │                                                              │
+│   DATABASE_URL=postgresql://...                 ◄── Prisma   │
 │   APIFY_TOKEN=apify_api_xxxxxxxxxxxxxxxxxxxx   ◄── ofertas    │
-│   ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxx   ◄── ranking    │
+│   GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxx   ◄── ranking    │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -32,9 +34,8 @@ backend/
 ### Paso 1 — Copiar la plantilla
 
 ```bash
-cd E:\Repositorios\HireFire\backend
-copy .env.example .env        # Windows (CMD/PowerShell)
-# o en bash:  cp .env.example .env
+cd /ruta/a/HireFire/backend
+cp .env.example .env
 ```
 
 ### Paso 2 — Editar `.env` y pegar tus claves
@@ -42,13 +43,17 @@ copy .env.example .env        # Windows (CMD/PowerShell)
 ```ini
 PORT=3000
 
+# PostgreSQL
+DATABASE_URL=postgresql://hirefire:hirefire@localhost:5432/hirefire?schema=public
+
 # Apify
 APIFY_TOKEN=apify_api_TU_TOKEN_REAL_ACA
-APIFY_JOBS_ACTOR=bebity~linkedin-jobs-scraper
+APIFY_JOBS_ACTOR=curious_coder/linkedin-jobs-scraper
 
-# Claude
-ANTHROPIC_API_KEY=sk-ant-TU_KEY_REAL_ACA
-CLAUDE_MODEL=claude-sonnet-4-6
+# Groq
+GROQ_API_KEY=gsk_TU_KEY_REAL_ACA
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
 > ⚠️ **Nunca** subas el `.env` a GitHub ni lo pegues en un chat. Ya está protegido por
@@ -71,87 +76,75 @@ CLAUDE_MODEL=claude-sonnet-4-6
 El plan **Free** de Apify viene con **$5 USD de crédito mensual** que se renueva. Para uso
 personal probablemente nunca lo gastes.
 
-### 🔑 Claude / Anthropic (`ANTHROPIC_API_KEY`)
+### 🔑 Groq (`GROQ_API_KEY`)
 
 ```
-1. Crear cuenta ──► https://console.anthropic.com/
-2. Cargar saldo:  Settings ─► Billing  (mínimo ~$5)
-3. Ir a:  Settings ─► API Keys ─► Create Key
-   URL directa: https://console.anthropic.com/settings/keys
-4. Copiar la key (empieza con sk-ant-...) ── solo se muestra UNA vez
-5. Pegarla en .env  →  ANTHROPIC_API_KEY=...
+1. Crear cuenta ──► https://console.groq.com
+2. Ir a: API Keys ─► Create API Key
+3. Copiar la key (empieza con gsk_...)
+4. Pegarla en .env  →  GROQ_API_KEY=...
 ```
 
-> La API de Claude es **prepaga**: cargás saldo y se descuenta por uso. No hay tier gratis,
-> pero el costo por búsqueda es de centavos (ver abajo).
+> El repo asume Groq como proveedor de IA. El modelo por defecto es `llama-3.3-70b-versatile`,
+> configurable desde `GROQ_MODEL`.
 
 ---
 
-## 4. Costo estimado por búsqueda
+## 4. Notas de costos
 
-Una búsqueda = traer N ofertas de Apify + que Claude las rankee contra tu perfil.
+Una búsqueda completa combina:
 
-### 4.1. Apify (los datos)
+- una llamada al actor de Apify para traer ofertas,
+- una o más llamadas a Groq para ranking,
+- y, opcionalmente, una llamada adicional a Groq para analizar el perfil.
+
+### 4.1. Apify
 
 - Modelo **pay-per-result**: pagás por oferta traída.
-- Con el crédito gratis de $5/mes, una búsqueda de 30–50 ofertas es **prácticamente $0**.
-- Si superaras el free tier: ~**$0.001–0.005 por oferta** según el actor.
+- El crédito y el costo dependen de tu cuenta y del actor configurado en `APIFY_JOBS_ACTOR`.
+- El repo no calcula ni valida precios en runtime.
 
-### 4.2. Claude (el ranking) — el costo principal
+### 4.2. Groq
 
-Tarifa de `claude-sonnet-4-6` (referencia): **~$3 por millón de tokens de entrada** y
-**~$15 por millón de tokens de salida**. El perfil va **cacheado** (lectura ~$0.30/M).
+- HireFire envía el perfil y las ofertas al modelo configurado en `GROQ_MODEL`.
+- El costo real depende de tu plan, del modelo elegido y de la longitud de las descripciones.
+- Desde el código se puede confirmar que cada descripción se recorta a **1.500 caracteres** y que el matching corre en lotes de **8 ofertas**.
+- Para confirmar pricing vigente, revisá la documentación comercial de Groq antes de estimar costos.
 
-Cómo procesa HireFire una búsqueda de **30 ofertas**:
+### 4.3. Qué sí podés ajustar desde la app
 
-```
-30 ofertas ÷ 8 por lote  ≈  4 llamadas a Claude
-
-Por búsqueda (aprox.):
-  • Entrada (descripciones de ofertas) : ~14.000 tokens  → ~$0.043
-  • Salida (score + razones + gaps)    : ~4.000  tokens  → ~$0.060
-  • Perfil cacheado                    : casi gratis
-  ────────────────────────────────────────────────────────
-  TOTAL Claude por búsqueda            ≈  $0.08 – $0.12
-```
-
-### 4.3. Tabla resumen
-
-| Ofertas por búsqueda | Apify        | Claude        | **Total estimado** |
-|----------------------|--------------|---------------|--------------------|
-| 10                   | ~$0 (free)   | ~$0.03–0.05   | **~$0.05**         |
-| 30                   | ~$0 (free)   | ~$0.08–0.12   | **~$0.10**         |
-| 50                   | ~$0 (free)   | ~$0.15–0.25   | **~$0.20**         |
-
-```
-Proyección de uso:
-  3 búsquedas/día × 30 ofertas ≈ $0.30/día ≈ ~$9 USD/mes en Claude
-  (Apify cubierto por el free tier)
-```
-
-> 💡 Los números son estimaciones: el costo real sube/baja según **cuán largas** sean las
-> descripciones de las ofertas (es lo que más tokens consume). Por eso el código recorta
-> cada descripción a 1.500 caracteres antes de enviarla a Claude.
+- Bajar `limit` en la búsqueda reduce linealmente ofertas y tokens.
+- Usar un modelo distinto en `GROQ_MODEL` cambia costo, latencia y calidad.
+- El análisis de perfil es una llamada separada: si no lo usás, no consumís esa parte.
 
 ---
 
-## 5. Cómo bajar el costo si hiciera falta
+## 5. Crear la base y sincronizar Prisma
 
-| Palanca                         | Efecto                                              |
-|---------------------------------|-----------------------------------------------------|
-| Bajar `limit` de la búsqueda    | Menos ofertas = menos tokens (lineal)               |
-| Recorte de descripción (ya activo, 1.500 chars) | Menos tokens de entrada por oferta  |
-| Prompt caching del perfil (ya activo) | El perfil no se re-cobra en cada lote         |
-| Usar `claude-haiku-4-5` para pre-filtrar | Modelo más barato para descartar lo obvio    |
+```bash
+cd /ruta/a/HireFire/backend
+npm ci
+npm run db:push
+```
+
+`db:push` crea o sincroniza las tablas definidas en `backend/prisma/schema.prisma`:
+
+- `Profile`
+- `Experience`
+- `Search`
+- `SavedSearch`
 
 ---
 
 ## 6. Verificar que quedó bien
 
 ```bash
-cd E:\Repositorios\HireFire\backend
+cd /ruta/a/HireFire/backend
 npm run dev
 ```
 
 - ✅ Si ves `HireFire backend escuchando en http://localhost:3000` → las keys están OK.
-- ❌ Si ves `Falta la variable de entorno requerida: APIFY_TOKEN` → revisá el `.env`.
+- ✅ Si `curl http://localhost:3000/api/health` responde `{"status":"ok","service":"hirefire-backend"}` → backend operativo.
+- ✅ Smoke de persistencia real: `POST /api/profile` y después `GET /api/profile/:id` → confirma que Prisma/PostgreSQL están guardando y leyendo bien.
+- ❌ Si ves `Falta la variable de entorno requerida: ...` → revisá el `.env`.
+- ❌ Si Prisma no conecta → verificá `DATABASE_URL` y que PostgreSQL esté levantado.
