@@ -17,7 +17,7 @@ export const env = {
   databaseUrl: required('DATABASE_URL'),
   apify: {
     token: required('APIFY_TOKEN'),
-    jobsActor: optional('APIFY_JOBS_ACTOR', 'bebity~linkedin-jobs-scraper'),
+    jobsActor: optional('APIFY_JOBS_ACTOR', 'curious_coder/linkedin-jobs-scraper'),
   },
   groq: {
     apiKey: required('GROQ_API_KEY'),
