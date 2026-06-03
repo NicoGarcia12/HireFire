@@ -27,3 +27,4 @@ npm-debug.log*
 # Tooling local
 .codegraph/
 codegraph.db.lock/
+.playwright-mcp/
