@@ -1,82 +1,14 @@
-export interface ProfileExperience {
-  title: string;
-  company: string;
-  description: string;
-}
-
-export interface ProfilePreferences {
-  locations: string[];
-  remote: boolean;
-  seniority?: string;
-}
-
-export interface Profile {
-  id: string;
-  headline: string;
-  summary: string;
-  skills: string[];
-  experience: ProfileExperience[];
-  preferences: ProfilePreferences;
-}
-
-export interface MatchResult {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  remote: boolean;
-  description: string;
-  url: string;
-  postedAt?: string;
-  score: number;
-  reasons: string[];
-  gaps: string[];
-}
-
-export interface SearchResponse {
-  count: number;
-  results: MatchResult[];
-}
-
-export interface SearchRecord {
-  id: string;
-  keywords: string;
-  location?: string;
-  remote: boolean;
-  limit: number;
-  count: number;
-  topResults: MatchResult[];
-  createdAt: string;
-}
-
-export interface SavedSearch {
-  id: string;
-  name: string;
-  profileId: string;
-  keywords: string;
-  location?: string;
-  remote: boolean;
-  limit: number;
-  createdAt: string;
-}
-
-export interface ProfileSuggestion {
-  section: 'headline' | 'summary' | 'skills' | 'experience' | 'general';
-  priority: 'alta' | 'media' | 'baja';
-  issue: string;
-  suggestion: string;
-}
-
-export interface ProfileAnalysis {
-  score: number;
-  strengths: string[];
-  suggestions: ProfileSuggestion[];
-}
-
-export interface LinkedInImport {
-  headline: string;
-  summary: string;
-  skills: string[];
-  experience: ProfileExperience[];
-  filesFound: string[];
-}
+// Bridge legacy: los modelos ahora viven en domain/** y DTOs HTTP en infrastructure/api/dto/**.
+// Mantener este barrel mínimo evita churn en imports existentes sin reintroducir un archivo catch-all.
+export type { LanguageLevel, EnglishLevel } from '../domain/matching/enums/language-level.enum';
+export type { AllowedLanguage } from '../domain/matching/models/allowed-language.model';
+export type { LanguageWarning } from '../domain/matching/models/language-warning.model';
+export type { MatchResult } from '../domain/matching/models/match-result.model';
+export type { AllowedLanguageCode, SupportedLanguage } from '../domain/matching/types/allowed-language-code.type';
+export type { LanguageWarningReason } from '../domain/matching/types/language-warning-reason.type';
+export type { LinkedInImport } from '../domain/profile/models/linkedin-import.model';
+export type { ProfileAnalysis, ProfileSuggestion } from '../domain/profile/models/profile-analysis.model';
+export type { Profile, ProfileExperience, ProfilePreferences } from '../domain/profile/models/profile.model';
+export type { SavedSearch } from '../domain/search/models/saved-search.model';
+export type { SearchRecord } from '../domain/search/models/search-record.model';
+export type { SearchResponse } from '../infrastructure/api/dto/search-response.dto';
