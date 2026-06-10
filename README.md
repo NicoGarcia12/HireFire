@@ -230,8 +230,22 @@ curl http://localhost:3000/api/profile/<id>
 
 1. Abrí `http://localhost:4200`.
 2. **"1 · Tu perfil"** — completá headline, skills y experiencia. Clic en **Guardar perfil** → aparece badge `Guardado ✓`.
-3. **"2 · Buscar ofertas"** — ingresá keywords (ej. `backend node`), ubicación y cantidad. Clic en **Buscar**.
+3. **"2 · Buscar ofertas"** — ingresá keywords (ej. `backend node`), ubicación, cantidad y, si querés, ajustá la sección **Filtro de idioma**.
 4. En unos segundos aparece la lista rankeada con **score 0–100**, razones de match y gaps por oferta.
+
+#### Filtro de idioma
+
+La búsqueda permite reducir ruido antes del ranking con IA. Hay dos mecanismos:
+
+**Filtro legacy de inglés** (campos individuales):
+- `allowEnglishRequirements` (`true` por defecto): si lo desactivás, se excluyen ofertas que pidan inglés.
+- `maxEnglishLevelEnabled` (`false` por defecto): si lo activás, se aplica un tope de nivel.
+- `maxEnglishLevel`: nivel máximo permitido (`A1`, `A2`, `B1`, `B2`, `C1`, `C2`).
+
+**Filtro multi-idioma** (inglés y portugués juntos):
+- `allowedLanguages`: array de `{ language: 'english' | 'portuguese', maxLevel }`. Si un idioma no aparece en el array, se bloquean ofertas que lo requieran (incluso avisos escritos íntegramente en ese idioma). Los requisitos marcados como deseables generan un warning sin bloquear la oferta.
+
+El backend aplica estos filtros **antes** de enviar ofertas a Groq, evitando gastar tokens en puestos que no cumplen tus preferencias.
 
 ---
 
@@ -260,7 +274,10 @@ curl -X POST http://localhost:3000/api/search \
     "keywords": "backend node typescript",
     "location": "Argentina",
     "remote": true,
-    "limit": 20
+    "limit": 20,
+    "allowEnglishRequirements": true,
+    "maxEnglishLevelEnabled": true,
+    "maxEnglishLevel": "B2"
   }'
 
 # 3) Verificar persistencia (reiniciá el backend primero)
@@ -300,6 +317,16 @@ curl http://localhost:3000/api/profile/<id-del-paso-1>
 | GET    | `/api/saved-searches?profileId=...` | Lista búsquedas guardadas                                 |
 | POST   | `/api/saved-searches`        | Guarda una búsqueda reutilizable                                |
 | DELETE | `/api/saved-searches/:id`    | Elimina una búsqueda guardada                                   |
+
+---
+
+## Mejoras recomendadas / Roadmap
+
+Pendientes útiles para mejorar calidad y reducir fricción:
+
+1. **Persistir filtros de idioma en historial y búsquedas guardadas**: para que las re-ejecuciones preserven `allowEnglishRequirements`, `maxEnglishLevelEnabled`, `maxEnglishLevel` y `allowedLanguages` del criterio original.
+2. **Agregar tests frontend de DOM real**: cubrir interacción visible del filtro de idioma y payload enviado desde la UI.
+3. **Agregar tests de schema/Zod**: validar defaults (`allowEnglishRequirements=true`, `maxEnglishLevelEnabled=false`) y rechazos para niveles inválidos de `maxEnglishLevel` y `allowedLanguages`.
 
 ---
 
