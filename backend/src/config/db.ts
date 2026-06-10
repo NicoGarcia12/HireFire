@@ -1,1 +1,1 @@
-export { prisma } from '../infrastructure/db/prisma.service.js';
+export { prisma } from '../utils/prisma-service.js';
