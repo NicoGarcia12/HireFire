@@ -2,14 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { HomeDataPort } from './application/home/home-data.port';
 import { App } from './app';
 import { routes } from './app.routes';
+import { ApiService } from './infrastructure/api/hirefire-api.service';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes), provideHttpClient()]
+      providers: [provideRouter(routes), provideHttpClient(), { provide: HomeDataPort, useExisting: ApiService }]
     }).compileComponents();
   });
 
@@ -19,6 +21,7 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
+  /** Valida que el bridge de routing cargue la Home real desde presentation/features. */
   it('should render the home shell for the default route', async () => {
     const harness = await RouterTestingHarness.create();
 
