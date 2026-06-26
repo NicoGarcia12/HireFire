@@ -231,6 +231,7 @@ export class Home {
   }
 
   public deleteSaved(id: string): void {
+    if (!confirm('¿Eliminás esta búsqueda guardada?')) return;
     this.facade.deleteSaved(id);
   }
 
@@ -244,6 +245,7 @@ export class Home {
   }
 
   public deleteHistory(id: string): void {
+    if (!confirm('¿Eliminás este registro del historial?')) return;
     this.facade.deleteHistory(id);
   }
 
