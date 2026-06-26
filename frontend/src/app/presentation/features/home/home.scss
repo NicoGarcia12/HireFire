@@ -356,6 +356,11 @@ input, textarea, select {
   &--low  { background: #1c2a1c; color: #9ae0a0; }
 }
 
+@media (max-width: 768px) {
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .exp__row { grid-template-columns: 1fr 1fr auto; }
+}
+
 @media (max-width: 640px) {
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .exp__row { grid-template-columns: 1fr; }
