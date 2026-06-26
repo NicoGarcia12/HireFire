@@ -356,6 +356,18 @@ input, textarea, select {
   &--low  { background: #1c2a1c; color: #9ae0a0; }
 }
 
+input.ng-invalid.ng-touched,
+textarea.ng-invalid.ng-touched {
+  border-color: #c0392b;
+}
+
+.field-error {
+  display: block;
+  color: #ff8080;
+  font-size: .75rem;
+  margin-top: .2rem;
+}
+
 @media (max-width: 768px) {
   .grid-3 { grid-template-columns: 1fr 1fr; }
   .exp__row { grid-template-columns: 1fr 1fr auto; }

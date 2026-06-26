@@ -25,6 +25,9 @@
       <label>
         Headline *
         <input formControlName="headline" placeholder="Backend Developer · Node.js & TypeScript" />
+        @if (profileForm.get('headline')?.invalid && profileForm.get('headline')?.touched) {
+          <span class="field-error">Este campo es requerido</span>
+        }
       </label>
       <label>
         Resumen
@@ -59,8 +62,18 @@
         <div formArrayName="experience">
           @for (exp of experience.controls; track $index) {
             <div class="exp__row" [formGroupName]="$index">
-              <input formControlName="title" placeholder="Puesto" />
-              <input formControlName="company" placeholder="Empresa" />
+              <div class="field-wrap">
+                <input formControlName="title" placeholder="Puesto" />
+                @if (exp.get('title')?.invalid && exp.get('title')?.touched) {
+                  <span class="field-error">Requerido</span>
+                }
+              </div>
+              <div class="field-wrap">
+                <input formControlName="company" placeholder="Empresa" />
+                @if (exp.get('company')?.invalid && exp.get('company')?.touched) {
+                  <span class="field-error">Requerido</span>
+                }
+              </div>
               <input formControlName="description" placeholder="Qué hacías" />
               <button type="button" class="btn btn--icon" (click)="removeExp($index)"
                 [disabled]="experience.length === 1"
@@ -157,6 +170,9 @@
         Palabras clave *
         <input formControlName="keywords" placeholder="backend node typescript"
           [attr.disabled]="!profileId() || null" />
+        @if (searchForm.get('keywords')?.invalid && searchForm.get('keywords')?.touched) {
+          <span class="field-error">Este campo es requerido</span>
+        }
       </label>
       <div class="grid-3">
         <label>
