@@ -31,6 +31,7 @@ export class HomeFacade {
   private readonly savedSignal = signal<SavedSearch[]>([]);
   private readonly savingSearchSignal = signal(false);
   private readonly historySignal = signal<SearchRecord[]>([]);
+  private readonly searchedSignal = signal(false);
 
   public readonly profileId: Signal<string | null> = this.profileIdSignal.asReadonly();
 
@@ -52,6 +53,7 @@ export class HomeFacade {
   public readonly saved: Signal<SavedSearch[]> = this.savedSignal.asReadonly();
   public readonly savingSearch: Signal<boolean> = this.savingSearchSignal.asReadonly();
   public readonly history: Signal<SearchRecord[]> = this.historySignal.asReadonly();
+  public readonly searched: Signal<boolean> = this.searchedSignal.asReadonly();
 
   /**
    * Guarda o actualiza el perfil y luego refresca las listas derivadas que dependen del profileId.
@@ -141,11 +143,13 @@ export class HomeFacade {
         next: (response) => {
           this.resultsSignal.set(response.results);
           this.searchingSignal.set(false);
+          this.searchedSignal.set(true);
           this.loadHistory();
         },
         error: (error: unknown) => {
           this.errorSignal.set(this.messageFromError(error));
           this.searchingSignal.set(false);
+          this.searchedSignal.set(true);
         }
       });
   }

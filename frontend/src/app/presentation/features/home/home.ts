@@ -41,6 +41,7 @@ export class Home {
   public readonly saved = this.facade.saved;
   public readonly savingSearch = this.facade.savingSearch;
   public readonly history = this.facade.history;
+  public readonly searched = this.facade.searched;
 
   public readonly profileForm = this.fb.group({
     headline: ['', Validators.required],

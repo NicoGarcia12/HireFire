@@ -361,6 +361,15 @@ textarea.ng-invalid.ng-touched {
   border-color: #c0392b;
 }
 
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--muted);
+
+  &__title { font-size: 1.1rem; font-weight: 600; margin: 0 0 .4rem; color: var(--text); }
+  &__hint  { margin: 0; font-size: .9rem; }
+}
+
 .field-error {
   display: block;
   color: #ff8080;

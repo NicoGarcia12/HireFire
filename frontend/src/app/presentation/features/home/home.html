@@ -320,6 +320,14 @@
     </section>
   }
 
+  <!-- ══════════════════ SIN RESULTADOS ══════════════════ -->
+  @if (!searching() && searched() && results().length === 0) {
+    <div class="empty-state">
+      <p class="empty-state__title">Sin resultados para estos criterios</p>
+      <p class="empty-state__hint">Probá con otras palabras clave o menos filtros.</p>
+    </div>
+  }
+
   <!-- ══════════════════ HISTORIAL ══════════════════ -->
   @if (profileId() && history().length > 0) {
     <section class="card card--compact">
