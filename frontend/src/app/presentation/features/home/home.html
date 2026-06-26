@@ -63,7 +63,8 @@
               <input formControlName="company" placeholder="Empresa" />
               <input formControlName="description" placeholder="Qué hacías" />
               <button type="button" class="btn btn--icon" (click)="removeExp($index)"
-                [disabled]="experience.length === 1" title="Quitar">✕</button>
+                [disabled]="experience.length === 1"
+                [attr.aria-label]="'Quitar experiencia ' + (exp.value.company ? 'en ' + exp.value.company : '#' + ($index + 1))">✕</button>
             </div>
           }
         </div>
