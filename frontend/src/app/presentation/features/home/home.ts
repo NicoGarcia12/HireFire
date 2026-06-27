@@ -2,17 +2,20 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSliderModule } from '@angular/material/slider';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatOptionModule } from '@angular/material/core';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { JobCardComponent } from '../../../shared/job-card/job-card.component';
 import { HomeFacade } from '../../../application/home/home.facade';
 import type { HomeProfilePayload, HomeSearchPayload } from '../../../application/home/home-data.port';
 import { LANGUAGE_LEVELS, type LanguageLevel } from '../../../domain/matching/enums/language-level.enum';
 import type { AllowedLanguage } from '../../../domain/matching/models/allowed-language.model';
-import type { LanguageWarning } from '../../../domain/matching/models/language-warning.model';
 import type { AllowedLanguageCode } from '../../../domain/matching/types/allowed-language-code.type';
 import type { LinkedInImport } from '../../../domain/profile/models/linkedin-import.model';
 import type { SavedSearch } from '../../../domain/search/models/saved-search.model';
@@ -38,6 +41,9 @@ function csvToArray(value: string): string[] {
     MatCheckboxModule,
     MatSelectModule,
     MatOptionModule,
+    MatDialogModule,
+    MatSliderModule,
+    JobCardComponent,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
@@ -46,6 +52,7 @@ function csvToArray(value: string): string[] {
 export class Home {
   private readonly fb = inject(FormBuilder);
   private readonly facade = inject(HomeFacade);
+  private readonly dialog = inject(MatDialog);
 
   public readonly profileId = this.facade.profileId;
   public readonly error = this.facade.error;
@@ -59,6 +66,11 @@ export class Home {
   public readonly savingSearch = this.facade.savingSearch;
   public readonly history = this.facade.history;
   public readonly searched = this.facade.searched;
+
+  public readonly minScore = signal(0);
+  public readonly filteredResults = computed(() =>
+    this.results().filter(j => j.score >= this.minScore())
+  );
 
   public readonly profileForm = this.fb.group({
     headline: ['', Validators.required],
@@ -177,19 +189,6 @@ export class Home {
     return this.allowedLanguages.controls.map((control) => control.getRawValue());
   }
 
-  public warningText(warning: LanguageWarning): string {
-    if (typeof warning === 'string') return warning;
-
-    const language = this.languageLabel(warning.language);
-
-    if (warning.reason === 'desirable-language-not-allowed') {
-      const requestedLevel = warning.requestedLevel ? ` ${warning.requestedLevel}` : '';
-      return `${language}${requestedLevel} aparece como requisito deseable, pero no está entre los idiomas permitidos.`;
-    }
-
-    return `${language} ${warning.requestedLevel ?? 'sin nivel especificado'} aparece como requisito deseable y supera el nivel permitido ${warning.allowedLevel ?? 'configurado'}.`;
-  }
-
   public runSearch(params?: SearchRunParams): void {
     if (!this.profileId()) return;
 
@@ -203,6 +202,10 @@ export class Home {
 
   public scoreClass(s: number): string {
     return s >= 75 ? 'score--high' : s >= 50 ? 'score--mid' : 'score--low';
+  }
+
+  public scoreLabel(value: number): string {
+    return `${value}`;
   }
 
   public loadSaved(): void {
@@ -247,8 +250,11 @@ export class Home {
   }
 
   public deleteSaved(id: string): void {
-    if (!confirm('¿Eliminás esta búsqueda guardada?')) return;
-    this.facade.deleteSaved(id);
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Eliminar búsqueda', message: '¿Eliminás esta búsqueda guardada?' },
+      width: '360px',
+    });
+    ref.afterClosed().subscribe((confirmed) => { if (confirmed) this.facade.deleteSaved(id); });
   }
 
   public loadHistory(): void {
@@ -261,8 +267,11 @@ export class Home {
   }
 
   public deleteHistory(id: string): void {
-    if (!confirm('¿Eliminás este registro del historial?')) return;
-    this.facade.deleteHistory(id);
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Eliminar historial', message: '¿Eliminás este registro del historial?' },
+      width: '360px',
+    });
+    ref.afterClosed().subscribe((confirmed) => { if (confirmed) this.facade.deleteHistory(id); });
   }
 
   public exportResults(): void {
