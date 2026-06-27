@@ -1,432 +1,456 @@
-<div class="page">
-  <header class="hero">
+<div class="hf-page">
+
+  <header class="hf-hero">
     <h1>HireFire 🔥</h1>
     <p>Cargá tu perfil, buscá por palabras clave y dejá que Groq/Llama rankee las ofertas.</p>
   </header>
 
   <!-- ══════════════════ STEPPER ══════════════════ -->
-  <nav class="stepper" aria-label="Progreso del flujo">
-    <div class="stepper__step"
-         [class.stepper__step--done]="!!profileId()"
-         [class.stepper__step--active]="!profileId()">
-      <div class="stepper__bubble">{{ profileId() ? '✓' : '1' }}</div>
-      <span class="stepper__label">Perfil</span>
+  <nav class="hf-stepper" aria-label="Progreso del flujo">
+    <div class="hf-stepper__step"
+         [class.hf-stepper__step--done]="!!profileId()"
+         [class.hf-stepper__step--active]="!profileId()">
+      <div class="hf-stepper__bubble">{{ profileId() ? '✓' : '1' }}</div>
+      <span class="hf-stepper__label">Perfil</span>
     </div>
-    <div class="stepper__line" [class.stepper__line--done]="!!profileId()"></div>
-    <div class="stepper__step"
-         [class.stepper__step--done]="results().length > 0"
-         [class.stepper__step--active]="!!profileId() && !results().length">
-      <div class="stepper__bubble">{{ results().length > 0 ? '✓' : '2' }}</div>
-      <span class="stepper__label">Buscar</span>
+    <div class="hf-stepper__line" [class.hf-stepper__line--done]="!!profileId()"></div>
+    <div class="hf-stepper__step"
+         [class.hf-stepper__step--done]="results().length > 0"
+         [class.hf-stepper__step--active]="!!profileId() && !results().length">
+      <div class="hf-stepper__bubble">{{ results().length > 0 ? '✓' : '2' }}</div>
+      <span class="hf-stepper__label">Buscar</span>
     </div>
-    <div class="stepper__line" [class.stepper__line--done]="results().length > 0"></div>
-    <div class="stepper__step"
-         [class.stepper__step--done]="results().length > 0">
-      <div class="stepper__bubble">{{ results().length > 0 ? '✓' : '3' }}</div>
-      <span class="stepper__label">Resultados</span>
+    <div class="hf-stepper__line" [class.hf-stepper__line--done]="results().length > 0"></div>
+    <div class="hf-stepper__step"
+         [class.hf-stepper__step--done]="results().length > 0">
+      <div class="hf-stepper__bubble">{{ results().length > 0 ? '✓' : '3' }}</div>
+      <span class="hf-stepper__label">Resultados</span>
     </div>
   </nav>
 
   @if (error()) {
-    <div class="alert">{{ error() }}</div>
+    <div class="hf-alert">{{ error() }}</div>
   }
 
-  <div class="layout">
-    <div class="layout__left">
+  <div class="hf-layout">
+    <div class="hf-layout__left">
 
-  <!-- ══════════════════ PERFIL ══════════════════ -->
-  <section class="card">
-    <div class="card__head">
-      <h2>1 · Tu perfil</h2>
-      <div class="head-actions">
-        @if (profileId()) { <span class="pill pill--ok">Guardado ✓</span> }
-        <label class="btn btn--ghost btn--sm" [class.loading]="importing()">
-          {{ importing() ? 'Importando…' : '⬆ Importar LinkedIn ZIP' }}
-          <input type="file" accept=".zip" (change)="onFileChange($event)" hidden />
-        </label>
-      </div>
-    </div>
-
-    <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-      <label>
-        Headline *
-        <input formControlName="headline" placeholder="Backend Developer · Node.js & TypeScript" />
-        @if (profileForm.get('headline')?.invalid && profileForm.get('headline')?.touched) {
-          <span class="field-error">Este campo es requerido</span>
-        }
-      </label>
-      <label>
-        Resumen
-        <textarea formControlName="summary" rows="2"
-          placeholder="Breve descripción de tu experiencia"></textarea>
-      </label>
-      <div class="grid-2">
-        <label>
-          Skills (separadas por coma)
-          <input formControlName="skills" placeholder="Node.js, TypeScript, Express" />
-        </label>
-        <label>
-          Ubicaciones preferidas (coma)
-          <input formControlName="locations" placeholder="Argentina, Remoto LATAM" />
-        </label>
-      </div>
-      <div class="grid-2">
-        <label>
-          Seniority
-          <input formControlName="seniority" placeholder="Semi Senior / Senior" />
-        </label>
-        <label class="check">
-          <input type="checkbox" formControlName="remote" /> Preferís remoto
-        </label>
-      </div>
-
-      <div class="exp">
-        <div class="exp__head">
-          <h3>Experiencia</h3>
-          <button type="button" class="btn btn--ghost btn--sm" (click)="addExp()">+ Agregar</button>
+      <!-- ══════════════════ PERFIL ══════════════════ -->
+      <mat-card class="hf-card">
+        <div class="hf-card__head">
+          <h2 class="hf-card__title">1 · Tu perfil</h2>
+          <div class="hf-head-actions">
+            @if (profileId()) {
+              <span class="hf-pill hf-pill--ok">Guardado ✓</span>
+            }
+            <button mat-stroked-button [disabled]="importing()" (click)="fileInput.click()">
+              {{ importing() ? 'Importando…' : '⬆ Importar LinkedIn ZIP' }}
+            </button>
+            <input #fileInput type="file" accept=".zip" (change)="onFileChange($event)" hidden />
+          </div>
         </div>
-        <div formArrayName="experience">
-          @for (exp of experience.controls; track $index) {
-            <div class="exp__row" [formGroupName]="$index">
-              <div class="field-wrap">
-                <input formControlName="title" placeholder="Puesto" />
-                @if (exp.get('title')?.invalid && exp.get('title')?.touched) {
-                  <span class="field-error">Requerido</span>
-                }
-              </div>
-              <div class="field-wrap">
-                <input formControlName="company" placeholder="Empresa" />
-                @if (exp.get('company')?.invalid && exp.get('company')?.touched) {
-                  <span class="field-error">Requerido</span>
-                }
-              </div>
-              <input formControlName="description" placeholder="Qué hacías" />
-              <button type="button" class="btn btn--icon" (click)="removeExp($index)"
-                [disabled]="experience.length === 1"
-                [attr.aria-label]="'Quitar experiencia ' + (exp.value.company ? 'en ' + exp.value.company : '#' + ($index + 1))">✕</button>
+
+        <mat-card-content>
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+
+            <mat-form-field appearance="outline" class="hf-field-full">
+              <mat-label>Headline *</mat-label>
+              <input matInput formControlName="headline" placeholder="Backend Developer · Node.js & TypeScript" />
+              <mat-error>Este campo es requerido</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="hf-field-full">
+              <mat-label>Resumen</mat-label>
+              <textarea matInput formControlName="summary" rows="2"
+                placeholder="Breve descripción de tu experiencia"></textarea>
+            </mat-form-field>
+
+            <div class="hf-grid-2">
+              <mat-form-field appearance="outline">
+                <mat-label>Skills (separadas por coma)</mat-label>
+                <input matInput formControlName="skills" placeholder="Node.js, TypeScript, Express" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Ubicaciones preferidas (coma)</mat-label>
+                <input matInput formControlName="locations" placeholder="Argentina, Remoto LATAM" />
+              </mat-form-field>
             </div>
-          }
-        </div>
-      </div>
 
-      <div class="profile-actions">
-        <button type="submit" class="btn btn--primary" [disabled]="savingProfile()">
-          {{ savingProfile() ? 'Guardando…' : (profileId() ? 'Actualizar perfil' : 'Guardar perfil') }}
-        </button>
-        @if (profileId()) {
-          <button type="button" class="btn btn--accent" [disabled]="analyzing()" (click)="analyzeProfile()">
-            {{ analyzing() ? 'Analizando…' : '🔍 Analizar perfil' }}
-          </button>
-        }
-      </div>
-    </form>
-  </section>
+            <div class="hf-grid-2 hf-grid-2--align-center">
+              <mat-form-field appearance="outline">
+                <mat-label>Seniority</mat-label>
+                <input matInput formControlName="seniority" placeholder="Semi Senior / Senior" />
+              </mat-form-field>
+              <mat-checkbox formControlName="remote">Preferís remoto</mat-checkbox>
+            </div>
 
-  <!-- ══════════════════ ANÁLISIS DE PERFIL ══════════════════ -->
-  @if (analyzing()) {
-    <section class="card analysis skeleton-card">
-      <div class="card__head">
-        <div class="skeleton skeleton--title" style="width: 55%"></div>
-        <div class="skeleton skeleton--score-badge"></div>
-      </div>
-      <div class="skeleton skeleton--line" style="width: 90%"></div>
-      <div class="skeleton skeleton--line" style="width: 75%"></div>
-      <div class="skeleton skeleton--line" style="width: 80%"></div>
-      <div style="margin-top: 1.2rem">
-        <div class="skeleton skeleton--line" style="width: 30%"></div>
-        <div class="skeleton skeleton--line" style="width: 85%"></div>
-        <div class="skeleton skeleton--line" style="width: 70%"></div>
-      </div>
-    </section>
-  }
+            <div class="hf-exp">
+              <div class="hf-exp__head">
+                <h3>Experiencia</h3>
+                <button type="button" mat-stroked-button (click)="addExp()">+ Agregar</button>
+              </div>
+              <div formArrayName="experience">
+                @for (exp of experience.controls; track $index) {
+                  <div class="hf-exp__row" [formGroupName]="$index">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Puesto</mat-label>
+                      <input matInput formControlName="title" />
+                      <mat-error>Requerido</mat-error>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Empresa</mat-label>
+                      <input matInput formControlName="company" />
+                      <mat-error>Requerido</mat-error>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Qué hacías</mat-label>
+                      <input matInput formControlName="description" />
+                    </mat-form-field>
+                    <button type="button" mat-icon-button
+                      [disabled]="experience.length === 1"
+                      [attr.aria-label]="'Quitar experiencia ' + ($index + 1)"
+                      (click)="removeExp($index)">✕</button>
+                  </div>
+                }
+              </div>
+            </div>
 
-  @if (analysis(); as a) {
-    <section class="card analysis">
-      <div class="card__head">
-        <h2>Análisis de tu perfil LinkedIn</h2>
-        <div class="score-badge" [class]="scoreClass(a.score)">{{ a.score }}<span>/100</span></div>
-      </div>
+            <div class="hf-profile-actions">
+              <button type="submit" mat-flat-button color="primary" [disabled]="savingProfile()">
+                {{ savingProfile() ? 'Guardando…' : (profileId() ? 'Actualizar perfil' : 'Guardar perfil') }}
+              </button>
+              @if (profileId()) {
+                <button type="button" mat-flat-button class="hf-btn-accent"
+                  [disabled]="analyzing()" (click)="analyzeProfile()">
+                  {{ analyzing() ? 'Analizando…' : '🔍 Analizar perfil' }}
+                </button>
+              }
+            </div>
 
-      @if (a.strengths.length) {
-        <div class="analysis-block">
-          <h3 class="analysis-block__title analysis-block__title--ok">✓ Puntos fuertes</h3>
-          <ul>@for (s of a.strengths; track s) { <li>{{ s }}</li> }</ul>
-        </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- ══════════════════ ANÁLISIS ══════════════════ -->
+      @if (analyzing()) {
+        <mat-card class="hf-card hf-skeleton-card">
+          <div class="hf-card__head">
+            <div class="hf-skeleton hf-skeleton--title" style="width: 55%"></div>
+            <div class="hf-skeleton hf-skeleton--score-badge"></div>
+          </div>
+          <mat-card-content>
+            <div class="hf-skeleton hf-skeleton--line" style="width: 90%"></div>
+            <div class="hf-skeleton hf-skeleton--line" style="width: 75%"></div>
+            <div class="hf-skeleton hf-skeleton--line" style="width: 80%"></div>
+          </mat-card-content>
+        </mat-card>
       }
 
-      @if (a.suggestions.length) {
-        <div class="analysis-block">
-          <h3 class="analysis-block__title">Sugerencias de mejora</h3>
-          <div class="suggestions">
-            @for (sug of a.suggestions; track sug.issue) {
-              <div class="suggestion">
-                <div class="suggestion__head">
-                  <span class="tag tag--section">{{ sectionLabel(sug.section) }}</span>
-                  <span class="priority" [class]="priorityClass(sug.priority)">
-                    {{ sug.priority }}
-                  </span>
-                </div>
-                <p class="suggestion__issue">{{ sug.issue }}</p>
-                <p class="suggestion__fix">{{ sug.suggestion }}</p>
+      @if (analysis(); as a) {
+        <mat-card class="hf-card">
+          <div class="hf-card__head">
+            <h2 class="hf-card__title">Análisis de tu perfil LinkedIn</h2>
+            <div class="hf-score-badge" [class]="scoreClass(a.score)">{{ a.score }}<span>/100</span></div>
+          </div>
+          <mat-card-content>
+            @if (a.strengths.length) {
+              <div class="hf-analysis-block">
+                <h3 class="hf-analysis-block__title hf-analysis-block__title--ok">✓ Puntos fuertes</h3>
+                <ul>@for (s of a.strengths; track s) { <li>{{ s }}</li> }</ul>
               </div>
             }
-          </div>
-        </div>
-      }
-    </section>
-  }
-
-    </div><!-- /layout__left -->
-    <div class="layout__right">
-
-  <!-- ══════════════════ BÚSQUEDAS GUARDADAS ══════════════════ -->
-  @if (saved().length > 0) {
-    <section class="card card--compact">
-      <h2>Búsquedas guardadas</h2>
-      <div class="saved-list">
-        @for (s of saved(); track s.id) {
-          <div class="saved-item">
-            <div class="saved-info">
-              <strong>{{ s.name }}</strong>
-              <span class="muted">{{ s.keywords }}{{ s.location ? ' · ' + s.location : '' }}</span>
-            </div>
-            <div class="saved-actions">
-              <button class="btn btn--ghost btn--sm" (click)="runSaved(s)">▶ Ejecutar</button>
-              <button class="btn btn--icon" (click)="deleteSaved(s.id)" title="Eliminar">✕</button>
-            </div>
-          </div>
-        }
-      </div>
-    </section>
-  }
-
-  <!-- ══════════════════ BÚSQUEDA ══════════════════ -->
-  <section class="card" [class.card--disabled]="!profileId()">
-    <div class="card__head">
-      <h2>2 · Buscar ofertas</h2>
-      @if (!profileId()) { <span class="pill">Guardá el perfil primero</span> }
-    </div>
-
-    <form [formGroup]="searchForm" (ngSubmit)="runSearch()">
-      <label>
-        Palabras clave *
-        <input formControlName="keywords" placeholder="backend node typescript"
-          [attr.disabled]="!profileId() || null" />
-        @if (searchForm.get('keywords')?.invalid && searchForm.get('keywords')?.touched) {
-          <span class="field-error">Este campo es requerido</span>
-        }
-      </label>
-      <div class="grid-3">
-        <label>
-          Ubicación
-          <input formControlName="location" placeholder="Argentina"
-            [attr.disabled]="!profileId() || null" />
-        </label>
-        <label>
-          Cantidad
-          <input type="number" formControlName="limit" min="1" max="200"
-            [attr.disabled]="!profileId() || null" />
-        </label>
-        <label class="check">
-          <input type="checkbox" formControlName="remote"
-            [attr.disabled]="!profileId() || null" /> Solo remoto
-        </label>
-      </div>
-
-      <div class="language-filters" aria-labelledby="language-filters-title">
-        <h3 id="language-filters-title">Idiomas permitidos</h3>
-        <p class="help-text help-text--flush">
-          Las publicaciones escritas en idiomas no permitidos se excluyen. Si un idioma aparece sólo como requisito deseable,
-          la oferta puede mostrarse con una advertencia cuando el backend la marque.
-        </p>
-
-        @if (availableLanguages().length > 0) {
-          <div class="language-picker">
-            <label for="allowed-language-select">
-              Agregar idioma
-              <select id="allowed-language-select" data-testid="language-select"
-                [value]="selectedLanguage()"
-                (change)="onLanguageSelectionChange($any($event.target).value)">
-                @for (language of availableLanguages(); track language.code) {
-                  <option [value]="language.code">{{ language.label }}</option>
-                }
-              </select>
-            </label>
-            <button type="button" class="btn btn--ghost" data-testid="add-language-button"
-              (click)="addSelectedLanguage()">
-              Agregar
-            </button>
-          </div>
-        }
-
-        @if (allowedLanguages.length > 0) {
-          <div class="allowed-language-list" formArrayName="allowedLanguages" aria-label="Lista de idiomas permitidos">
-            @for (languageControl of allowedLanguages.controls; track languageControl.controls.language.value) {
-              <div class="allowed-language-item" [formGroupName]="$index"
-                [attr.data-testid]="'allowed-language-' + languageControl.controls.language.value">
-                <div>
-                  <strong>{{ languageLabel(languageControl.controls.language.value) }}</strong>
-                  <span class="muted">Permitido hasta nivel</span>
+            @if (a.suggestions.length) {
+              <div class="hf-analysis-block">
+                <h3 class="hf-analysis-block__title">Sugerencias de mejora</h3>
+                <div class="hf-suggestions">
+                  @for (sug of a.suggestions; track sug.issue) {
+                    <div class="hf-suggestion">
+                      <div class="hf-suggestion__head">
+                        <span class="hf-tag hf-tag--section">{{ sectionLabel(sug.section) }}</span>
+                        <span class="hf-priority" [class]="priorityClass(sug.priority)">{{ sug.priority }}</span>
+                      </div>
+                      <p class="hf-suggestion__issue">{{ sug.issue }}</p>
+                      <p class="hf-suggestion__fix">{{ sug.suggestion }}</p>
+                    </div>
+                  }
                 </div>
-                <label class="language-level" [attr.for]="'allowed-language-' + languageControl.controls.language.value + '-level'">
-                  <span class="sr-only">Nivel máximo de {{ languageLabel(languageControl.controls.language.value) }}</span>
-                  <select [id]="'allowed-language-' + languageControl.controls.language.value + '-level'"
-                    formControlName="maxLevel"
-                    [attr.data-testid]="'allowed-language-' + languageControl.controls.language.value + '-level'">
-                    @for (level of languageLevels; track level) {
-                      <option [value]="level">{{ level }}</option>
-                    }
-                  </select>
-                </label>
-                <button type="button" class="btn btn--icon btn--remove-language"
-                  [attr.data-testid]="'remove-language-' + languageControl.controls.language.value"
-                  [attr.aria-label]="'Quitar ' + languageLabel(languageControl.controls.language.value)"
-                  (click)="removeAllowedLanguage($index)">
-                  ✕
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+
+    </div><!-- /hf-layout__left -->
+    <div class="hf-layout__right">
+
+      <!-- ══════════════════ BÚSQUEDAS GUARDADAS ══════════════════ -->
+      @if (saved().length > 0) {
+        <mat-card class="hf-card hf-card--compact">
+          <div class="hf-card__head">
+            <h2 class="hf-card__title">Búsquedas guardadas</h2>
+          </div>
+          <mat-card-content>
+            <div class="hf-item-list">
+              @for (s of saved(); track s.id) {
+                <div class="hf-item">
+                  <div class="hf-item__info">
+                    <strong>{{ s.name }}</strong>
+                    <span class="hf-muted">{{ s.keywords }}{{ s.location ? ' · ' + s.location : '' }}</span>
+                  </div>
+                  <div class="hf-item__actions">
+                    <button mat-stroked-button (click)="runSaved(s)">▶ Ejecutar</button>
+                    <button mat-icon-button aria-label="Eliminar búsqueda guardada"
+                      (click)="deleteSaved(s.id)">✕</button>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- ══════════════════ BÚSQUEDA ══════════════════ -->
+      <mat-card class="hf-card" [class.hf-card--disabled]="!profileId()">
+        <div class="hf-card__head">
+          <h2 class="hf-card__title">2 · Buscar ofertas</h2>
+          @if (!profileId()) {
+            <span class="hf-pill">Guardá el perfil primero</span>
+          }
+        </div>
+
+        <mat-card-content>
+          <form [formGroup]="searchForm" (ngSubmit)="runSearch()">
+
+            <mat-form-field appearance="outline" class="hf-field-full">
+              <mat-label>Palabras clave *</mat-label>
+              <input matInput formControlName="keywords" placeholder="backend node typescript" />
+              <mat-error>Este campo es requerido</mat-error>
+            </mat-form-field>
+
+            <div class="hf-grid-3">
+              <mat-form-field appearance="outline">
+                <mat-label>Ubicación</mat-label>
+                <input matInput formControlName="location" placeholder="Argentina" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Cantidad</mat-label>
+                <input matInput type="number" formControlName="limit" min="1" max="200" />
+              </mat-form-field>
+              <mat-checkbox formControlName="remote" class="hf-checkbox-cell">Solo remoto</mat-checkbox>
+            </div>
+
+            <div class="hf-language-filters" aria-labelledby="language-filters-title">
+              <h3 id="language-filters-title">Idiomas permitidos</h3>
+              <p class="hf-help-text">
+                Las publicaciones escritas en idiomas no permitidos se excluyen. Si un idioma aparece sólo como
+                requisito deseable, la oferta puede mostrarse con una advertencia cuando el backend la marque.
+              </p>
+
+              @if (availableLanguages().length > 0) {
+                <div class="hf-language-picker">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Agregar idioma</mat-label>
+                    <mat-select [value]="selectedLanguage()"
+                      (selectionChange)="onLanguageSelectionChange($event.value)"
+                      id="allowed-language-select" data-testid="language-select">
+                      @for (language of availableLanguages(); track language.code) {
+                        <mat-option [value]="language.code">{{ language.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <button type="button" mat-stroked-button data-testid="add-language-button"
+                    (click)="addSelectedLanguage()">
+                    Agregar
+                  </button>
+                </div>
+              }
+
+              @if (allowedLanguages.length > 0) {
+                <div class="hf-allowed-language-list" formArrayName="allowedLanguages"
+                  aria-label="Lista de idiomas permitidos">
+                  @for (languageControl of allowedLanguages.controls; track languageControl.controls.language.value) {
+                    <div class="hf-allowed-language-item" [formGroupName]="$index"
+                      [attr.data-testid]="'allowed-language-' + languageControl.controls.language.value">
+                      <div>
+                        <strong>{{ languageLabel(languageControl.controls.language.value) }}</strong>
+                        <span class="hf-muted">Permitido hasta nivel</span>
+                      </div>
+                      <mat-form-field appearance="outline" class="hf-language-level-field">
+                        <mat-label>Nivel</mat-label>
+                        <mat-select
+                          [id]="'allowed-language-' + languageControl.controls.language.value + '-level'"
+                          formControlName="maxLevel"
+                          [attr.data-testid]="'allowed-language-' + languageControl.controls.language.value + '-level'">
+                          @for (level of languageLevels; track level) {
+                            <mat-option [value]="level">{{ level }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                      <button type="button" mat-icon-button
+                        [attr.data-testid]="'remove-language-' + languageControl.controls.language.value"
+                        [attr.aria-label]="'Quitar ' + languageLabel(languageControl.controls.language.value)"
+                        (click)="removeAllowedLanguage($index)">✕</button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="hf-search-actions">
+              <button type="submit" mat-flat-button color="primary"
+                [disabled]="!profileId() || searching()">
+                {{ searching() ? 'Buscando y rankeando…' : 'Buscar' }}
+              </button>
+              @if (results().length > 0) {
+                <button type="button" mat-stroked-button (click)="toggleSaveDialog()">
+                  {{ showSaveDialog() ? 'Cancelar' : '💾 Guardar búsqueda' }}
+                </button>
+              }
+            </div>
+
+            @if (showSaveDialog()) {
+              <div class="hf-save-dialog">
+                <mat-form-field appearance="outline" class="hf-field-full">
+                  <mat-label>Nombre de la búsqueda</mat-label>
+                  <input matInput placeholder="Ej. Backend LATAM remoto"
+                    [value]="saveNameValue()"
+                    (input)="saveNameValue.set($any($event.target).value)" />
+                </mat-form-field>
+                <button type="button" mat-flat-button color="primary"
+                  [disabled]="!saveNameValue().trim() || savingSearch()"
+                  (click)="saveCurrentSearch()">
+                  {{ savingSearch() ? 'Guardando…' : 'Guardar' }}
                 </button>
               </div>
             }
+
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- ══════════════════ RESULTADOS (skeleton) ══════════════════ -->
+      @if (searching()) {
+        <section class="hf-results">
+          <div class="hf-skeleton hf-skeleton--title" style="width: 35%; margin-bottom: 1rem"></div>
+          @for (i of [1, 2, 3]; track i) {
+            <mat-card class="hf-job-card hf-skeleton-card">
+              <div class="hf-job__head">
+                <div style="flex: 1">
+                  <div class="hf-skeleton hf-skeleton--title" style="width: 60%"></div>
+                  <div class="hf-skeleton hf-skeleton--line" style="width: 40%; margin-top: .5rem"></div>
+                </div>
+                <div class="hf-skeleton hf-skeleton--score"></div>
+              </div>
+              <mat-card-content>
+                <div class="hf-skeleton hf-skeleton--line" style="width: 80%"></div>
+                <div class="hf-skeleton hf-skeleton--line" style="width: 65%"></div>
+              </mat-card-content>
+            </mat-card>
+          }
+        </section>
+      }
+
+      <!-- ══════════════════ RESULTADOS ══════════════════ -->
+      @if (results().length > 0) {
+        <section class="hf-results">
+          <div class="hf-results__head">
+            <h2>Resultados ({{ results().length }})</h2>
+            <button type="button" mat-stroked-button (click)="exportResults()">⬇ Exportar CSV</button>
           </div>
-        }
-      </div>
+          @for (job of results(); track job.id) {
+            <mat-card class="hf-job-card">
+              <div class="hf-job__head">
+                <div>
+                  <h3>{{ job.title }}</h3>
+                  <p class="hf-job__meta">
+                    {{ job.company }} · {{ job.location }}
+                    @if (job.remote) { <span class="hf-tag">Remoto</span> }
+                  </p>
+                </div>
+                <div class="hf-score-ring" [class]="scoreClass(job.score)"
+                  [attr.aria-label]="'Score: ' + job.score + ' de 100'">
+                  <svg viewBox="0 0 36 36" aria-hidden="true">
+                    <circle class="hf-score-ring__track" cx="18" cy="18" r="15.9"/>
+                    <circle class="hf-score-ring__fill" cx="18" cy="18" r="15.9"
+                      [style.stroke-dashoffset]="100 - job.score"/>
+                  </svg>
+                  <span class="hf-score-ring__value">{{ job.score }}</span>
+                </div>
+              </div>
+              <mat-card-content>
+                @if (job.reasons.length) {
+                  <div class="hf-block">
+                    <strong>Por qué encajás</strong>
+                    <ul>@for (r of job.reasons; track r) { <li>{{ r }}</li> }</ul>
+                  </div>
+                }
+                @if (job.gaps.length) {
+                  <div class="hf-block hf-block--gaps">
+                    <strong>Qué te falta</strong>
+                    <ul>@for (g of job.gaps; track g) { <li>{{ g }}</li> }</ul>
+                  </div>
+                }
+                @if (job.languageWarnings?.length) {
+                  <div class="hf-block hf-block--warnings">
+                    <strong>Advertencias de idioma</strong>
+                    <ul>@for (warning of job.languageWarnings; track $index) {
+                      <li>{{ warningText(warning) }}</li>
+                    }</ul>
+                  </div>
+                }
+                @if (job.url) {
+                  <a mat-button color="primary" [href]="job.url" target="_blank" rel="noopener">
+                    Ver oferta ↗
+                  </a>
+                }
+              </mat-card-content>
+            </mat-card>
+          }
+        </section>
+      }
 
-      <div class="search-actions">
-        <button type="submit" class="btn btn--primary" [disabled]="!profileId() || searching()">
-          {{ searching() ? 'Buscando y rankeando…' : 'Buscar' }}
-        </button>
-        @if (results().length > 0) {
-          <button type="button" class="btn btn--ghost btn--sm" (click)="toggleSaveDialog()">
-            {{ showSaveDialog() ? 'Cancelar' : '💾 Guardar búsqueda' }}
-          </button>
-        }
-      </div>
-
-      @if (showSaveDialog()) {
-        <div class="save-dialog">
-          <input placeholder="Nombre (ej. Backend LATAM remoto)"
-            [value]="saveNameValue()"
-            (input)="saveNameValue.set($any($event.target).value)" />
-          <button type="button" class="btn btn--primary btn--sm"
-            (click)="saveCurrentSearch()"
-            [disabled]="!saveNameValue().trim() || savingSearch()">
-            {{ savingSearch() ? 'Guardando…' : 'Guardar' }}
-          </button>
+      <!-- ══════════════════ SIN RESULTADOS ══════════════════ -->
+      @if (!searching() && searched() && results().length === 0) {
+        <div class="hf-empty-state">
+          <p class="hf-empty-state__title">Sin resultados para estos criterios</p>
+          <p class="hf-muted">Probá con otras palabras clave o menos filtros.</p>
         </div>
       }
-    </form>
-  </section>
 
-  <!-- ══════════════════ RESULTADOS ══════════════════ -->
-  @if (searching()) {
-    <section class="results">
-      <div class="skeleton skeleton--title" style="width: 35%; margin-bottom: 1rem"></div>
-      @for (i of [1, 2, 3]; track i) {
-        <article class="job skeleton-card">
-          <div class="job__head">
-            <div style="flex: 1">
-              <div class="skeleton skeleton--title" style="width: 60%"></div>
-              <div class="skeleton skeleton--line" style="width: 40%; margin-top: .5rem"></div>
-            </div>
-            <div class="skeleton skeleton--score"></div>
+      <!-- ══════════════════ HISTORIAL ══════════════════ -->
+      @if (profileId() && history().length > 0) {
+        <mat-card class="hf-card hf-card--compact">
+          <div class="hf-card__head">
+            <h2 class="hf-card__title">Historial ({{ history().length }})</h2>
+            <button mat-stroked-button (click)="toggleHistory()">
+              {{ showHistory() ? 'Ocultar' : 'Ver' }}
+            </button>
           </div>
-          <div style="margin-top: .8rem">
-            <div class="skeleton skeleton--line" style="width: 80%"></div>
-            <div class="skeleton skeleton--line" style="width: 65%"></div>
-          </div>
-        </article>
-      }
-    </section>
-  }
-
-  @if (results().length > 0) {
-    <section class="results">
-      <div class="results__head">
-        <h2>Resultados ({{ results().length }})</h2>
-        <button type="button" class="btn btn--ghost btn--sm" (click)="exportResults()">⬇ Exportar CSV</button>
-      </div>
-      @for (job of results(); track job.id) {
-        <article class="job">
-          <div class="job__head">
-            <div>
-              <h3>{{ job.title }}</h3>
-              <p class="job__meta">
-                {{ job.company }} · {{ job.location }}
-                @if (job.remote) { <span class="tag">Remoto</span> }
-              </p>
-            </div>
-            <div class="score-ring" [class]="scoreClass(job.score)" [attr.aria-label]="'Score: ' + job.score + ' de 100'">
-              <svg viewBox="0 0 36 36" aria-hidden="true">
-                <circle class="score-ring__track" cx="18" cy="18" r="15.9"/>
-                <circle class="score-ring__fill" cx="18" cy="18" r="15.9"
-                  [style.stroke-dashoffset]="100 - job.score"/>
-              </svg>
-              <span class="score-ring__value">{{ job.score }}</span>
-            </div>
-          </div>
-          @if (job.reasons.length) {
-            <div class="block">
-              <strong>Por qué encajás</strong>
-              <ul>@for (r of job.reasons; track r) { <li>{{ r }}</li> }</ul>
-            </div>
-          }
-          @if (job.gaps.length) {
-            <div class="block block--gaps">
-              <strong>Qué te falta</strong>
-              <ul>@for (g of job.gaps; track g) { <li>{{ g }}</li> }</ul>
-            </div>
-          }
-          @if (job.languageWarnings?.length) {
-            <div class="block block--language-warnings">
-              <strong>Advertencias de idioma</strong>
-              <ul>@for (warning of job.languageWarnings; track $index) { <li>{{ warningText(warning) }}</li> }</ul>
-            </div>
-          }
-          @if (job.url) {
-            <a class="btn btn--link" [href]="job.url" target="_blank" rel="noopener">Ver oferta ↗</a>
-          }
-        </article>
-      }
-    </section>
-  }
-
-  <!-- ══════════════════ SIN RESULTADOS ══════════════════ -->
-  @if (!searching() && searched() && results().length === 0) {
-    <div class="empty-state">
-      <p class="empty-state__title">Sin resultados para estos criterios</p>
-      <p class="empty-state__hint">Probá con otras palabras clave o menos filtros.</p>
-    </div>
-  }
-
-  <!-- ══════════════════ HISTORIAL ══════════════════ -->
-  @if (profileId() && history().length > 0) {
-    <section class="card card--compact">
-      <div class="card__head">
-        <h2>Historial ({{ history().length }})</h2>
-        <button class="btn btn--ghost btn--sm" (click)="toggleHistory()">
-          {{ showHistory() ? 'Ocultar' : 'Ver' }}
-        </button>
-      </div>
-      @if (showHistory()) {
-        <div class="history-list">
-          @for (h of history(); track h.id) {
-            <div class="history-item">
-              <div class="history-info">
-                <strong>{{ h.keywords }}</strong>
-                <span class="muted">
-                  {{ h.location || 'cualquier lugar' }} · {{ h.count }} resultados · {{ h.createdAt | date:'dd/MM HH:mm' }}
-                </span>
+          @if (showHistory()) {
+            <mat-card-content>
+              <div class="hf-item-list">
+                @for (h of history(); track h.id) {
+                  <div class="hf-item">
+                    <div class="hf-item__info">
+                      <strong>{{ h.keywords }}</strong>
+                      <span class="hf-muted">
+                        {{ h.location || 'cualquier lugar' }} · {{ h.count }} resultados · {{ h.createdAt | date:'dd/MM HH:mm' }}
+                      </span>
+                    </div>
+                    <div class="hf-item__actions">
+                      <button mat-stroked-button (click)="rerunHistory(h)">▶ Re-ejecutar</button>
+                      <button mat-icon-button aria-label="Eliminar historial"
+                        (click)="deleteHistory(h.id)">✕</button>
+                    </div>
+                  </div>
+                }
               </div>
-              <div class="saved-actions">
-                <button class="btn btn--ghost btn--sm" (click)="rerunHistory(h)">▶ Re-ejecutar</button>
-                <button class="btn btn--icon" (click)="deleteHistory(h.id)" title="Eliminar">✕</button>
-              </div>
-            </div>
+            </mat-card-content>
           }
-        </div>
+        </mat-card>
       }
-    </section>
-  }
 
-    </div><!-- /layout__right -->
-  </div><!-- /layout -->
+    </div><!-- /hf-layout__right -->
+  </div><!-- /hf-layout -->
+
 </div>
