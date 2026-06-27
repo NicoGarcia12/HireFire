@@ -8,6 +8,9 @@
     <div class="alert">{{ error() }}</div>
   }
 
+  <div class="layout">
+    <div class="layout__left">
+
   <!-- ══════════════════ PERFIL ══════════════════ -->
   <section class="card">
     <div class="card__head">
@@ -122,6 +125,9 @@
       }
     </section>
   }
+
+    </div><!-- /layout__left -->
+    <div class="layout__right">
 
   <!-- ══════════════════ BÚSQUEDAS GUARDADAS ══════════════════ -->
   @if (saved().length > 0) {
@@ -332,4 +338,7 @@
       }
     </section>
   }
+
+    </div><!-- /layout__right -->
+  </div><!-- /layout -->
 </div>
