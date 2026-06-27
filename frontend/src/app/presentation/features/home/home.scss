@@ -486,3 +486,14 @@ textarea.ng-invalid.ng-touched {
 }
 
 .skeleton-card { pointer-events: none; }
+
+@media (min-width: 1200px) {
+  .page { max-width: 1280px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+}
