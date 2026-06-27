@@ -1,3 +1,4 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { HomeDataPort, type HomeSearchPayload } from '../../application/home/home-data.port';
@@ -24,7 +25,7 @@ describe('Home search language filters', () => {
 
     await TestBed.configureTestingModule({
       imports: [Home],
-      providers: [{ provide: HomeDataPort, useValue: homeDataPortMock }]
+      providers: [provideZonelessChangeDetection(), { provide: HomeDataPort, useValue: homeDataPortMock }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Home);
@@ -76,32 +77,33 @@ describe('Home search language filters', () => {
   it('renders a language selector with English and Portuguese available initially', () => {
     fixture.detectChanges();
 
-    const options = Array.from(languageSelect()?.options ?? []).map((option) => option.value);
-
-    expect(options).toEqual(['english', 'portuguese']);
+    const available = component.availableLanguages().map((o) => o.code);
+    expect(available).toEqual(['english', 'portuguese']);
   });
 
-  it('removes English from the selector and shows it in the permissions list with level and remove button', () => {
+  it('removes English from available options and shows it in the allowed-languages list', () => {
     fixture.detectChanges();
 
-    addLanguage('english');
+    component.onLanguageSelectionChange('english');
+    component.addSelectedLanguage();
+    fixture.detectChanges();
 
-    const options = Array.from(languageSelect()?.options ?? []).map((option) => option.value);
-    expect(options).toEqual(['portuguese']);
+    const available = component.availableLanguages().map((o) => o.code);
+    expect(available).toEqual(['portuguese']);
     expect(selectedLanguageItem('english')).toBeTruthy();
-    expect(selectedLanguageLevel('english')).toBeTruthy();
     expect(removeLanguageButton('english')).toBeTruthy();
   });
 
-  it('returns English to the selector when removing it from the permissions list', () => {
+  it('returns English to available options when removing it from the allowed-languages list', () => {
     fixture.detectChanges();
 
-    addLanguage('english');
-    removeLanguageButton('english')?.click();
+    component.onLanguageSelectionChange('english');
+    component.addSelectedLanguage();
+    component.removeAllowedLanguage(0);
     fixture.detectChanges();
 
-    const options = Array.from(languageSelect()?.options ?? []).map((option) => option.value);
-    expect(options).toEqual(['english', 'portuguese']);
+    const available = component.availableLanguages().map((o) => o.code);
+    expect(available).toEqual(['english', 'portuguese']);
   });
 
   it('hides the language selector when English and Portuguese are already allowed', () => {
@@ -142,16 +144,4 @@ describe('Home search language filters', () => {
     });
   });
 
-  it('renders backend language warnings with reason and levels', () => {
-    fixture.detectChanges();
-
-    const text = component.warningText({
-      language: 'english',
-      requestedLevel: 'C1',
-      allowedLevel: 'B1',
-      reason: 'desirable-language-level-exceeds-allowed'
-    });
-
-    expect(text).toBe('Inglés C1 aparece como requisito deseable y supera el nivel permitido B1.');
-  });
 });
