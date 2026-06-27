@@ -402,7 +402,7 @@
     <section class="card card--compact">
       <div class="card__head">
         <h2>Historial ({{ history().length }})</h2>
-        <button class="btn btn--ghost btn--sm" (click)="showHistory.update(v => !v)">
+        <button class="btn btn--ghost btn--sm" (click)="toggleHistory()">
           {{ showHistory() ? 'Ocultar' : 'Ver' }}
         </button>
       </div>

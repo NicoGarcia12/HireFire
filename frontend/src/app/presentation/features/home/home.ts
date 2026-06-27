@@ -87,6 +87,10 @@ export class Home {
     return this.searchForm.controls.allowedLanguages;
   }
 
+  public toggleHistory(): void {
+    this.showHistory.update(v => !v);
+  }
+
   public addExp(): void {
     this.experience.push(this.newExp());
   }
