@@ -1,6 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatOptionModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { HomeFacade } from '../../../application/home/home.facade';
 import type { HomeProfilePayload, HomeSearchPayload } from '../../../application/home/home-data.port';
 import { LANGUAGE_LEVELS, type LanguageLevel } from '../../../domain/matching/enums/language-level.enum';
@@ -21,7 +28,17 @@ function csvToArray(value: string): string[] {
 
 @Component({
   selector: 'app-home',
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [
+    ReactiveFormsModule,
+    DatePipe,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatCheckboxModule,
+    MatSelectModule,
+    MatOptionModule,
+  ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -87,10 +104,6 @@ export class Home {
     return this.searchForm.controls.allowedLanguages;
   }
 
-  public toggleHistory(): void {
-    this.showHistory.update(v => !v);
-  }
-
   public addExp(): void {
     this.experience.push(this.newExp());
   }
@@ -120,7 +133,7 @@ export class Home {
   }
 
   public priorityClass(p: string): string {
-    return p === 'alta' ? 'priority--high' : p === 'media' ? 'priority--mid' : 'priority--low';
+    return p === 'alta' ? 'hf-priority--high' : p === 'media' ? 'hf-priority--mid' : 'hf-priority--low';
   }
 
   public sectionLabel(s: string): string {
@@ -138,9 +151,6 @@ export class Home {
     if (this.isAllowedLanguageCode(value)) this.selectedLanguage.set(value);
   }
 
-  /**
-   * Evita duplicar idiomas permitidos: al agregar uno, desaparece del selector hasta que se lo quite.
-   */
   public addSelectedLanguage(): void {
     const language = this.selectedLanguage();
     if (!this.availableLanguages().some((option) => option.code === language)) return;
@@ -167,9 +177,6 @@ export class Home {
     return this.allowedLanguages.controls.map((control) => control.getRawValue());
   }
 
-  /**
-   * Traduce warnings backend a copy de producto manteniendo soporte para el formato legacy string.
-   */
   public warningText(warning: LanguageWarning): string {
     if (typeof warning === 'string') return warning;
 
@@ -204,6 +211,10 @@ export class Home {
 
   public toggleSaveDialog(): void {
     this.showSaveDialog.update((v) => !v);
+  }
+
+  public toggleHistory(): void {
+    this.showHistory.update((v) => !v);
   }
 
   public saveCurrentSearch(): void {
@@ -285,9 +296,6 @@ export class Home {
     });
   }
 
-  /**
-   * Convierte campos comma-separated de la UI al contrato de aplicación sin alterar el payload HTTP final.
-   */
   private profilePayloadFromForm(): HomeProfilePayload {
     const value = this.profileForm.getRawValue();
     return {
