@@ -1,1 +1,30 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+// Custom M3 dark theme — deep-orange primary to match HireFire's accent (#ff6a3d)
+html {
+  @include mat.core();
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$orange-palette,
+    ),
+    typography: (
+      brand-family: 'Inter, system-ui, sans-serif',
+      bold-weight: 700,
+    ),
+    density: (
+      scale: 0,
+    ),
+  ));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+}
