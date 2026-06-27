@@ -4,6 +4,29 @@
     <p>Cargá tu perfil, buscá por palabras clave y dejá que Groq/Llama rankee las ofertas.</p>
   </header>
 
+  <!-- ══════════════════ STEPPER ══════════════════ -->
+  <nav class="stepper" aria-label="Progreso del flujo">
+    <div class="stepper__step"
+         [class.stepper__step--done]="!!profileId()"
+         [class.stepper__step--active]="!profileId()">
+      <div class="stepper__bubble">{{ profileId() ? '✓' : '1' }}</div>
+      <span class="stepper__label">Perfil</span>
+    </div>
+    <div class="stepper__line" [class.stepper__line--done]="!!profileId()"></div>
+    <div class="stepper__step"
+         [class.stepper__step--done]="results().length > 0"
+         [class.stepper__step--active]="!!profileId() && !results().length">
+      <div class="stepper__bubble">{{ results().length > 0 ? '✓' : '2' }}</div>
+      <span class="stepper__label">Buscar</span>
+    </div>
+    <div class="stepper__line" [class.stepper__line--done]="results().length > 0"></div>
+    <div class="stepper__step"
+         [class.stepper__step--done]="results().length > 0">
+      <div class="stepper__bubble">{{ results().length > 0 ? '✓' : '3' }}</div>
+      <span class="stepper__label">Resultados</span>
+    </div>
+  </nav>
+
   @if (error()) {
     <div class="alert">{{ error() }}</div>
   }
