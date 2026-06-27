@@ -55,7 +55,7 @@
 
             <mat-form-field appearance="outline" class="hf-field-full">
               <mat-label>Headline *</mat-label>
-              <input matInput formControlName="headline" placeholder="Backend Developer · Node.js & TypeScript" />
+              <input matInput formControlName="headline" placeholder="Backend Developer · Node.js & TypeScript" data-testid="profile-headline" />
               <mat-error>Este campo es requerido</mat-error>
             </mat-form-field>
 
@@ -94,12 +94,12 @@
                   <div class="hf-exp__row" [formGroupName]="$index">
                     <mat-form-field appearance="outline">
                       <mat-label>Puesto</mat-label>
-                      <input matInput formControlName="title" />
+                      <input matInput formControlName="title" [attr.data-testid]="'exp-title-' + $index" />
                       <mat-error>Requerido</mat-error>
                     </mat-form-field>
                     <mat-form-field appearance="outline">
                       <mat-label>Empresa</mat-label>
-                      <input matInput formControlName="company" />
+                      <input matInput formControlName="company" [attr.data-testid]="'exp-company-' + $index" />
                       <mat-error>Requerido</mat-error>
                     </mat-form-field>
                     <mat-form-field appearance="outline">
@@ -116,7 +116,7 @@
             </div>
 
             <div class="hf-profile-actions">
-              <button type="submit" mat-flat-button color="primary" [disabled]="savingProfile()">
+              <button type="submit" mat-flat-button color="primary" [disabled]="savingProfile()" data-testid="save-profile-btn">
                 {{ savingProfile() ? 'Guardando…' : (profileId() ? 'Actualizar perfil' : 'Guardar perfil') }}
               </button>
               @if (profileId()) {
@@ -223,7 +223,7 @@
 
             <mat-form-field appearance="outline" class="hf-field-full">
               <mat-label>Palabras clave *</mat-label>
-              <input matInput formControlName="keywords" placeholder="backend node typescript" />
+              <input matInput formControlName="keywords" placeholder="backend node typescript" data-testid="search-keywords" />
               <mat-error>Este campo es requerido</mat-error>
             </mat-form-field>
 
@@ -298,7 +298,7 @@
 
             <div class="hf-search-actions">
               <button type="submit" mat-flat-button color="primary"
-                [disabled]="!profileId() || searching()">
+                [disabled]="!profileId() || searching()" data-testid="search-submit">
                 {{ searching() ? 'Buscando y rankeando…' : 'Buscar' }}
               </button>
               @if (results().length > 0) {
@@ -352,7 +352,7 @@
 
       <!-- ══════════════════ RESULTADOS ══════════════════ -->
       @if (results().length > 0) {
-        <section class="hf-results">
+        <section class="hf-results" data-testid="results-section">
           <div class="hf-results__head">
             <h2>
               Resultados
@@ -387,7 +387,7 @@
 
       <!-- ══════════════════ SIN RESULTADOS ══════════════════ -->
       @if (!searching() && searched() && results().length === 0) {
-        <div class="hf-empty-state">
+        <div class="hf-empty-state" data-testid="empty-state">
           <p class="hf-empty-state__title">Sin resultados para estos criterios</p>
           <p class="hf-muted">Probá con otras palabras clave o menos filtros.</p>
         </div>

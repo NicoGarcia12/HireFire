@@ -1,0 +1,8 @@
+{
+  "id": "profile-test-1",
+  "headline": "Frontend Developer",
+  "summary": "Experienced developer",
+  "skills": ["Angular", "TypeScript"],
+  "experience": [],
+  "preferences": { "locations": [], "remote": true }
+}
