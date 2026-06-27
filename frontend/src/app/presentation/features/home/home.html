@@ -84,7 +84,20 @@
 
   <!-- ══════════════════ ANÁLISIS DE PERFIL ══════════════════ -->
   @if (analyzing()) {
-    <p class="muted center">Analizando tu perfil con Groq/Llama… un momento.</p>
+    <section class="card analysis skeleton-card">
+      <div class="card__head">
+        <div class="skeleton skeleton--title" style="width: 55%"></div>
+        <div class="skeleton skeleton--score-badge"></div>
+      </div>
+      <div class="skeleton skeleton--line" style="width: 90%"></div>
+      <div class="skeleton skeleton--line" style="width: 75%"></div>
+      <div class="skeleton skeleton--line" style="width: 80%"></div>
+      <div style="margin-top: 1.2rem">
+        <div class="skeleton skeleton--line" style="width: 30%"></div>
+        <div class="skeleton skeleton--line" style="width: 85%"></div>
+        <div class="skeleton skeleton--line" style="width: 70%"></div>
+      </div>
+    </section>
   }
 
   @if (analysis(); as a) {
@@ -259,7 +272,24 @@
 
   <!-- ══════════════════ RESULTADOS ══════════════════ -->
   @if (searching()) {
-    <p class="muted center">Trayendo ofertas de Apify y rankeando con Groq… puede tardar unos segundos.</p>
+    <section class="results">
+      <div class="skeleton skeleton--title" style="width: 35%; margin-bottom: 1rem"></div>
+      @for (i of [1, 2, 3]; track i) {
+        <article class="job skeleton-card">
+          <div class="job__head">
+            <div style="flex: 1">
+              <div class="skeleton skeleton--title" style="width: 60%"></div>
+              <div class="skeleton skeleton--line" style="width: 40%; margin-top: .5rem"></div>
+            </div>
+            <div class="skeleton skeleton--score"></div>
+          </div>
+          <div style="margin-top: .8rem">
+            <div class="skeleton skeleton--line" style="width: 80%"></div>
+            <div class="skeleton skeleton--line" style="width: 65%"></div>
+          </div>
+        </article>
+      }
+    </section>
   }
 
   @if (results().length > 0) {
