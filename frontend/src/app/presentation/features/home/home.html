@@ -275,7 +275,14 @@
                 @if (job.remote) { <span class="tag">Remoto</span> }
               </p>
             </div>
-            <span class="score" [class]="scoreClass(job.score)">{{ job.score }}</span>
+            <div class="score-ring" [class]="scoreClass(job.score)" [attr.aria-label]="'Score: ' + job.score + ' de 100'">
+              <svg viewBox="0 0 36 36" aria-hidden="true">
+                <circle class="score-ring__track" cx="18" cy="18" r="15.9"/>
+                <circle class="score-ring__fill" cx="18" cy="18" r="15.9"
+                  [style.stroke-dashoffset]="100 - job.score"/>
+              </svg>
+              <span class="score-ring__value">{{ job.score }}</span>
+            </div>
           </div>
           @if (job.reasons.length) {
             <div class="block">
