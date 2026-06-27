@@ -250,6 +250,25 @@ export class Home {
     this.facade.deleteHistory(id);
   }
 
+  public exportResults(): void {
+    const header = ['Título', 'Empresa', 'Ubicación', 'Score', 'URL'];
+    const rows = this.results().map(j => [
+      `"${(j.title ?? '').replace(/"/g, '""')}"`,
+      `"${(j.company ?? '').replace(/"/g, '""')}"`,
+      `"${(j.location ?? '').replace(/"/g, '""')}"`,
+      j.score,
+      `"${j.url ?? ''}"`,
+    ]);
+    const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'hirefire-resultados.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   public setProfileIdForTesting(profileId: string): void {
     this.facade.setProfileIdForTesting(profileId);
   }

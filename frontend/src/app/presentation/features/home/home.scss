@@ -196,7 +196,16 @@ input, textarea, select {
 
 .muted { color: var(--muted); }
 
-.results { h2 { font-size: 1.3rem; } }
+.results {
+  h2 { font-size: 1.3rem; margin: 0; }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+}
 
 .job {
   background: var(--card);

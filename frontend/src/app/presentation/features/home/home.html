@@ -334,7 +334,10 @@
 
   @if (results().length > 0) {
     <section class="results">
-      <h2>Resultados ({{ results().length }})</h2>
+      <div class="results__head">
+        <h2>Resultados ({{ results().length }})</h2>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="exportResults()">⬇ Exportar CSV</button>
+      </div>
       @for (job of results(); track job.id) {
         <article class="job">
           <div class="job__head">
