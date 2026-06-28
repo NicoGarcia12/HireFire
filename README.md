@@ -1,4 +1,4 @@
-# HireFire 🔥
+# HireFire
 
 Buscador inteligente de postulaciones laborales. Cargás tu perfil, ingresás palabras clave, y la app recupera ofertas de LinkedIn vía **Apify** y las rankea con **Groq + Llama 3.3 70B** según cuánto encajan con tu experiencia.
 
@@ -36,13 +36,33 @@ Buscador inteligente de postulaciones laborales. Cargás tu perfil, ingresás pa
 ## 📋 Prerequisitos
 
 - **Git**
-- **Node.js 22** — el repo está pinneado con `.nvmrc` en `22.22.2`. Recomendado usar [nvm](https://github.com/nvm-sh/nvm) (`nvm use`).
+- **Node.js 22** — el repo está pinneado con `.nvmrc` en `22.22.2`. Requiere [nvm](https://github.com/nvm-sh/nvm) o instalar manualmente.
 - **PostgreSQL 16+**
-- **Cuentas gratuitas** en Apify y Groq (instrucciones abajo)
+- **Dos cuentas gratuitas**: Apify (scraping) y Groq (ranking con IA)
 
 ---
 
-## 🚀 Instalación paso a paso
+## 🚀 Instalación rápida
+
+**Opción 1: Script automatizado** (recomendado)
+
+**Linux / macOS**:
+```bash
+git clone git@github.com:NicoGarcia12/HireFire.git
+cd HireFire
+bash scripts/setup.sh
+```
+
+**Windows** (cmd.exe o PowerShell):
+```batch
+git clone git@github.com:NicoGarcia12/HireFire.git
+cd HireFire
+scripts\setup.bat
+```
+
+> El script verifica Node.js, PostgreSQL, crea usuario/BD, instala dependencias y migra la BD automáticamente.
+
+**Opción 2: Manual paso a paso**
 
 ### 1 · Instalar PostgreSQL
 
@@ -52,45 +72,44 @@ sudo apt update && sudo apt install -y postgresql postgresql-contrib
 sudo systemctl start postgresql && sudo systemctl enable postgresql
 ```
 
-**Windows** — descargar el installer desde postgresql.org, instalar con puerto por defecto (5432).
+**Windows** — descargar el installer desde [postgresql.org](https://www.postgresql.org/download/windows/), instalar con puerto por defecto (5432).
 
-**Crear usuario y base de datos** (igual en ambos SO):
-
+Luego, crear usuario y base de datos:
 ```bash
 # Linux
 sudo -u postgres psql -c "CREATE USER hirefire WITH PASSWORD 'hirefire';"
 sudo -u postgres psql -c "CREATE DATABASE hirefire OWNER hirefire;"
 ```
 
-```sql
--- Windows (SQL Shell o pgAdmin)
+```powershell
+# Windows (cmd.exe o PowerShell)
+psql -U postgres
+# Dentro de psql:
 CREATE USER hirefire WITH PASSWORD 'hirefire';
 CREATE DATABASE hirefire OWNER hirefire;
+\q
 ```
 
 ---
 
-### 2 · Clonar el repositorio
+### 2 · Clonar y preparar el repo
 
 ```bash
 git clone git@github.com:NicoGarcia12/HireFire.git
 cd HireFire
-nvm use          # activa Node 22.22.2
+nvm use          # activa Node 22.22.2 (o instalar si no usás nvm)
 ```
 
 ---
 
-### 3 · Obtener API keys (ambas gratuitas)
+### 3 · Crear cuentas gratuitas y obtener API keys
 
-**Apify** — datos de ofertas de LinkedIn
-1. Crear cuenta en [console.apify.com](https://console.apify.com/sign-up)
-2. **Settings → Integrations → API tokens** → copiar el token (`apify_api_...`)
-> Plan Free: $5 USD de crédito mensual, más que suficiente para uso personal.
+| Servicio | Cuenta | Dónde copiar la key | Nota |
+|----------|--------|-------------------|------|
+| **Apify** | [console.apify.com/sign-up](https://console.apify.com/sign-up) | **Settings → Integrations → API tokens** | Formato: `apify_api_...` |
+| **Groq** | [console.groq.com](https://console.groq.com) | **API Keys → Create API Key** | Formato: `gsk_...` |
 
-**Groq** — ranking con IA
-1. Crear cuenta en [console.groq.com](https://console.groq.com)
-2. **API Keys → Create API Key** → copiar la key (`gsk_...`)
-> Tier gratuito con límites por minuto holgados para uso personal.
+> **Límites gratuitos**: Apify incluye $5 USD/mes (suficiente para 20–50 búsquedas). Groq tiene límites por minuto holgados.
 
 ---
 
@@ -129,7 +148,7 @@ npm ci
 
 ---
 
-### 6 · Iniciar los servidores
+### 6 · Iniciar la app
 
 **Backend** (terminal 1):
 ```bash
@@ -151,40 +170,40 @@ Abrir **http://localhost:4200** en el navegador.
 
 ---
 
-## 📖 Cómo usar la app
+## 📖 Flujo de uso
 
-El flujo tiene 3 pasos, guiados por el stepper visual al tope de la página:
+El stepper al tope de la página guía los 3 pasos:
 
-### Paso 1 — Cargar tu perfil
+### 1 · Cargar tu perfil
 
 - Completar **Headline**, **Skills** (separadas por coma), **Ubicaciones** y **Experiencia**.
-- O bien hacer clic en **⬆ Importar LinkedIn ZIP** para pre-llenar automáticamente desde tu export de LinkedIn.
-- Clic en **Guardar perfil** → aparece el badge `Guardado ✓`.
-- Opcional: **🔍 Analizar perfil** genera un informe de fortalezas y sugerencias con score.
+- Alternativamente, hacer clic en **Importar LinkedIn ZIP** para auto-completar desde tu export de LinkedIn.
+- Clic **Guardar perfil** → aparece badge `Guardado ✓`.
+- Opcional: **Analizar perfil** genera un informe con score 0–100 y sugerencias.
 
-### Paso 2 — Buscar ofertas
+### 2 · Buscar ofertas
 
 - Ingresar **palabras clave** (ej. `backend node typescript`), ubicación y cantidad de resultados.
-- Configurar **Idiomas permitidos** si querés filtrar por idioma antes del ranking.
-- Clic en **Buscar** → Apify trae las ofertas, Groq las rankea contra tu perfil.
+- Configurar **Idiomas permitidos** si querés pre-filtrar por idioma (ahorra tokens de Groq).
+- Clic **Buscar** → Apify trae ofertas, Groq las rankea según tu perfil.
 
-### Paso 3 — Resultados
+### 3 · Revisar y exportar resultados
 
-- Cada oferta muestra **score 0–100**, razones de match, gaps y advertencias de idioma.
-- **💾 Guardar búsqueda** para reutilizar la combinación de filtros.
-- **⬇ Exportar CSV** para descargar todos los resultados.
-- El **historial** queda disponible en la parte inferior para re-ejecutar búsquedas anteriores.
+- Cada oferta muestra: **score 0–100**, razones de match, gaps y advertencias de idioma.
+- **Guardar búsqueda** reutiliza la combinación de filtros para futuras búsquedas.
+- **Exportar CSV** descarga todos los resultados.
+- **Historial** permite re-ejecutar búsquedas anteriores.
 
 ---
 
 ## 🌐 Filtro de idioma
 
-Permite reducir ruido antes del ranking con IA, ahorrando tokens de Groq.
+Pre-filtra ofertas antes del ranking con IA, ahorrando tokens de Groq:
 
-- Agregar idiomas al array **Idiomas permitidos** con el selector → botón **Agregar**.
-- Para cada idioma, elegir el **nivel máximo aceptado** (A1 → C2).
-- Las ofertas **escritas íntegramente** en un idioma no permitido se excluyen.
-- Los requisitos marcados como **deseables** generan un warning sin bloquear la oferta.
+1. Agregar idiomas al array **Idiomas permitidos** con el selector → botón **Agregar**.
+2. Elegir **nivel máximo aceptado** (A1 → C2) para cada idioma.
+3. Ofertas **escritas íntegramente** en idioma no permitido → excluidas.
+4. Requisitos **deseables** generan warning sin bloquear la oferta.
 
 ---
 
@@ -249,6 +268,43 @@ curl -X POST http://localhost:3000/api/search \
     "limit": 20
   }'
 ```
+
+---
+
+## 🔧 Troubleshooting
+
+### PostgreSQL
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| `psql: command not found` | PostgreSQL no en el PATH | Agregar `/usr/lib/postgresql/16/bin` al PATH o usar ruta completa |
+| `FATAL: Ident authentication failed` | Usuario/contraseña incorrecto | Revisar `.env`: `DATABASE_URL=postgresql://hirefire:hirefire@localhost:5432/hirefire` |
+| `FATAL: database "hirefire" does not exist` | BD no creada | Ejecutar `CREATE DATABASE hirefire OWNER hirefire;` en psql |
+| `Connection refused (127.0.0.1:5432)` | PostgreSQL no está corriendo | Linux: `sudo systemctl start postgresql`. Windows: iniciar desde Services. |
+
+### Node.js / npm
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| `command not found: node` | Node no instalado o no en PATH | Instalar desde [nodejs.org](https://nodejs.org) o usar nvm: `nvm install 22.22.2` |
+| `port 3000 already in use` | Otro proceso usa 3000 | Backend: cambiar puerto en `.env` (`PORT=3001`). Frontend: `npm start -- --port 4201` |
+| `Cannot find module 'X'` | Dependencias no instaladas | Correr `npm ci` en `backend/` y `frontend/` |
+
+### API Keys
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| `401 Unauthorized: APIFY_TOKEN` | Token inválido o expirado | Verificar en [console.apify.com/account/integrations](https://console.apify.com/account/integrations) |
+| `401 Unauthorized: GROQ_API_KEY` | Key inválida o deshabilitada | Verificar en [console.groq.com/keys](https://console.groq.com/keys). Crear una nueva si es necesario. |
+| `Rate limit exceeded` | Límites diarios agotados | Apify: esperar a mañana o upgradear plan. Groq: esperar 1 minuto. |
+
+### General
+
+| Problema | Solución |
+|----------|----------|
+| Frontend no conecta al backend | Verificar que backend está en `http://localhost:3000` (o el puerto configurado). Revisar CORS en `backend/src/middleware/cors.ts` |
+| Cambios en código no se reflejan | Ambos tienen hot-reload. Si no: detener servidor y reiniciar. |
+| Export CSV no funciona | Verificar navegador permite descargas. En modo incógnito, permitir pop-ups. |
 
 ---
 
