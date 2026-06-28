@@ -49,7 +49,9 @@ export async function fullSearchController(input: FullSearchInput): Promise<Full
     remote: searchParams.remote ?? false,
     limit: searchParams.limit ?? 30,
     results: ranked,
-  }).catch(() => { /* historial no es crítico para la respuesta */ });
+  }).catch(() => {
+    /* historial no es crítico para la respuesta */
+  });
 
   return { found: true, count: ranked.length, results: ranked };
 }

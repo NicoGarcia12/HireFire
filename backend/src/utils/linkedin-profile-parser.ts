@@ -38,7 +38,9 @@ function parseProfile(content: string): Pick<LinkedInImport, 'headline' | 'summa
 }
 
 function parseSkills(content: string): string[] {
-  return parseCsv(content).map((row) => pick(row, ['Name', 'name', 'Skill Name'])).filter(Boolean);
+  return parseCsv(content)
+    .map((row) => pick(row, ['Name', 'name', 'Skill Name']))
+    .filter(Boolean);
 }
 
 function parsePositions(content: string): LinkedInImport['experience'] {

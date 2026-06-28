@@ -1,7 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import { deleteSavedSearchController } from '../../controllers/saved-searches/delete-saved-search-controller.js';
 
-export async function deleteSavedSearchHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function deleteSavedSearchHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const id = String(req.params.id ?? '');
     if (!id) {

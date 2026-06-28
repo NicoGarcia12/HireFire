@@ -1,6 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import { searchJobsController } from '../../controllers/jobs/search-jobs-controller.js';
-import { filterJobsByEnglishPreference, filterJobsByLanguagePreferences } from '../../controllers/matching/language-filter-controller.js';
+import {
+  filterJobsByEnglishPreference,
+  filterJobsByLanguagePreferences,
+} from '../../controllers/matching/language-filter-controller.js';
 import type { Job, JobSearchParams } from '../../types/job.types.js';
 import type { JobSearchInput } from './jobs.schema.js';
 
@@ -16,7 +19,11 @@ function applyLanguageFilters(jobs: Job[], params: JobSearchParams): Job[] {
 }
 
 /** Búsqueda cruda en Apify, sin ranking semántico. */
-export async function searchJobsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function searchJobsHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     // req.body ya viene validado por validateBody(jobSearchSchema)
     const params = req.body as JobSearchInput;

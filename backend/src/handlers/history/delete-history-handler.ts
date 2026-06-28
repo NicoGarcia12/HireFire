@@ -1,7 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import { deleteHistoryController } from '../../controllers/history/delete-history-controller.js';
 
-export async function deleteHistoryHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function deleteHistoryHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const id = String(req.params.id ?? '');
     if (!id) {

@@ -1,7 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getProfileController } from '../../controllers/profile/get-profile-controller.js';
 
-export async function getProfileHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getProfileHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const id = String(req.params.id ?? '');
     if (!id) {

@@ -17,25 +17,14 @@ describe('HireFire — flujo principal', () => {
   });
 
   it('guarda el perfil y habilita la búsqueda', () => {
-    cy.get('[data-testid="profile-headline"]').type('Frontend Developer');
-    cy.get('[data-testid="exp-title-0"]').type('Dev');
-    cy.get('[data-testid="exp-company-0"]').type('Acme');
-    cy.get('[data-testid="save-profile-btn"]').click();
-
-    cy.wait('@saveProfile');
-    cy.wait('@getSaved');
-    cy.wait('@getHistory');
+    cy.fillProfile();
 
     cy.contains('Guardado ✓').should('be.visible');
     cy.get('[data-testid="search-submit"]').should('not.be.disabled');
   });
 
   it('ejecuta una búsqueda y muestra los resultados', () => {
-    cy.get('[data-testid="profile-headline"]').type('Frontend Developer');
-    cy.get('[data-testid="exp-title-0"]').type('Dev');
-    cy.get('[data-testid="exp-company-0"]').type('Acme');
-    cy.get('[data-testid="save-profile-btn"]').click();
-    cy.wait('@saveProfile');
+    cy.fillProfile();
 
     cy.get('[data-testid="search-keywords"]').type('angular');
     cy.get('[data-testid="search-submit"]').click();
@@ -49,11 +38,7 @@ describe('HireFire — flujo principal', () => {
   it('el stepper avanza al guardar perfil y al buscar', () => {
     cy.get('.hf-stepper__step').first().should('have.class', 'hf-stepper__step--active');
 
-    cy.get('[data-testid="profile-headline"]').type('Dev');
-    cy.get('[data-testid="exp-title-0"]').type('Dev');
-    cy.get('[data-testid="exp-company-0"]').type('Co');
-    cy.get('[data-testid="save-profile-btn"]').click();
-    cy.wait('@saveProfile');
+    cy.fillProfile('Dev');
 
     cy.get('.hf-stepper__step').first().should('have.class', 'hf-stepper__step--done');
 

@@ -13,7 +13,9 @@ const historySelect = {
 } as const;
 
 /** Persiste una búsqueda en el historial. Guarda solo el top 10 de resultados. */
-export async function saveSearchHistory(input: SaveSearchHistoryInput): Promise<SearchHistoryEntry> {
+export async function saveSearchHistory(
+  input: SaveSearchHistoryInput,
+): Promise<SearchHistoryEntry> {
   return prisma.search.create({
     data: {
       profileId: input.profileId,

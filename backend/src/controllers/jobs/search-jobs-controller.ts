@@ -122,7 +122,10 @@ export async function searchJobsController(params: JobSearchParams): Promise<Job
     if (!shouldFallbackToUrlActor(actor, error)) throw error;
 
     logger.warn(`Apify: actor legacy no disponible. Fallback automático a ${URL_SEARCH_ACTOR}.`);
-    const fallbackActor: JobsActorConfig = { actorId: URL_SEARCH_ACTOR, strategy: 'linkedin-search-url' };
+    const fallbackActor: JobsActorConfig = {
+      actorId: URL_SEARCH_ACTOR,
+      strategy: 'linkedin-search-url',
+    };
     const items = await loadActorItems(fallbackActor, params);
     const jobs = (items as RawApifyJob[]).map(normalize);
     logger.info(`Apify fallback: ${jobs.length} ofertas recuperadas`);

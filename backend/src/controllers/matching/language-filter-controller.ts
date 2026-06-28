@@ -1,4 +1,12 @@
-import type { Job, AllowedLanguagePreference, EnglishLevel, LanguageFilteredJob, LanguageWarning, LanguageLevel, SupportedLanguage } from '../../types/job.types.js';
+import type {
+  Job,
+  AllowedLanguagePreference,
+  EnglishLevel,
+  LanguageFilteredJob,
+  LanguageWarning,
+  LanguageLevel,
+  SupportedLanguage,
+} from '../../types/job.types.js';
 import { LANGUAGE_LEVELS } from '../../types/job.types.js';
 
 export interface EnglishFilterOptions {
@@ -36,8 +44,10 @@ const LEVEL_BY_NATURAL_LANGUAGE: ReadonlyArray<readonly [RegExp, LanguageLevel]>
 ];
 
 const EXPLICIT_LEVEL_PATTERN = /\b(A1|A2|B1|B2|C1|C2)\b/iu;
-const MANDATORY_REQUIREMENT_PATTERN = /\b(required|mandatory|excluyente|obligatorio|obrigat[oó]rio|must\s+have|advanced\s+english\s+required)\b/iu;
-const DESIRABLE_REQUIREMENT_PATTERN = /\b(desirable|nice\s+to\s+have|plus|valorado|deseable|desej[aá]vel|no\s+excluyente|ser[aá]\s+un\s+plus)\b/iu;
+const MANDATORY_REQUIREMENT_PATTERN =
+  /\b(required|mandatory|excluyente|obligatorio|obrigat[oó]rio|must\s+have|advanced\s+english\s+required)\b/iu;
+const DESIRABLE_REQUIREMENT_PATTERN =
+  /\b(desirable|nice\s+to\s+have|plus|valorado|deseable|desej[aá]vel|no\s+excluyente|ser[aá]\s+un\s+plus)\b/iu;
 
 const ENGLISH_COPY_MARKERS: readonly RegExp[] = [
   /\b(we\s+are\s+looking\s+for|we're\s+looking\s+for|requirements?|responsibilities|experience\s+with|collaborate\s+with|product\s+teams?|build\s+apis?)\b/iu,
@@ -82,7 +92,10 @@ function detectRequirementType(text: string): 'mandatory' | 'desirable' {
   return 'mandatory';
 }
 
-function detectLanguageRequirement(description: string, language: SupportedLanguage): LanguageRequirementDetection {
+function detectLanguageRequirement(
+  description: string,
+  language: SupportedLanguage,
+): LanguageRequirementDetection {
   const languagePattern = LANGUAGE_LABELS[language];
   if (!languagePattern.test(description)) {
     return { requiresLanguage: false, requirementType: 'mandatory' };
@@ -101,9 +114,10 @@ function isLikelyWrittenIn(text: string, language: SupportedLanguage): boolean {
 }
 
 function withLanguageWarning(job: Job, warning: LanguageWarning): LanguageFilteredJob {
-  const existingWarnings = 'languageWarnings' in job && Array.isArray(job.languageWarnings)
-    ? (job.languageWarnings as LanguageWarning[])
-    : [];
+  const existingWarnings =
+    'languageWarnings' in job && Array.isArray(job.languageWarnings)
+      ? (job.languageWarnings as LanguageWarning[])
+      : [];
   return { ...job, languageWarnings: [...existingWarnings, warning] };
 }
 
@@ -126,7 +140,8 @@ export function filterJobsByEnglishPreference(jobs: Job[], options: EnglishFilte
     const detection = detectEnglishRequirement(`${job.title}\n${job.description}`);
     if (!detection.requiresEnglish) return true;
     if (!options.allowEnglishRequirements) return false;
-    if (!options.maxEnglishLevelEnabled || !options.maxEnglishLevel || !detection.level) return true;
+    if (!options.maxEnglishLevelEnabled || !options.maxEnglishLevel || !detection.level)
+      return true;
     return compareEnglishLevels(detection.level, options.maxEnglishLevel) <= 0;
   });
 }
@@ -152,8 +167,8 @@ export function filterJobsByLanguagePreferences(
       if (requirement.requiresLanguage) {
         const levelExceedsAllowed = Boolean(
           allowedPreference &&
-            requirement.level &&
-            compareEnglishLevels(requirement.level, allowedPreference.maxLevel) > 0,
+          requirement.level &&
+          compareEnglishLevels(requirement.level, allowedPreference.maxLevel) > 0,
         );
 
         if (requirement.requirementType === 'desirable') {

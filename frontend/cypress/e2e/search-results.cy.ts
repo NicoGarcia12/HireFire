@@ -7,11 +7,7 @@ describe('HireFire — resultados de búsqueda', () => {
 
     cy.visit('/');
 
-    cy.get('[data-testid="profile-headline"]').type('Frontend Developer');
-    cy.get('[data-testid="exp-title-0"]').type('Dev');
-    cy.get('[data-testid="exp-company-0"]').type('Acme');
-    cy.get('[data-testid="save-profile-btn"]').click();
-    cy.wait('@saveProfile');
+    cy.fillProfile();
 
     cy.get('[data-testid="search-keywords"]').type('angular');
     cy.get('[data-testid="search-submit"]').click();
@@ -44,17 +40,13 @@ describe('HireFire — resultados de búsqueda', () => {
 describe('HireFire — estado vacío', () => {
   beforeEach(() => {
     cy.intercept('POST', 'http://localhost:3000/api/profile', { fixture: 'profile.json' }).as('saveProfile');
-    cy.intercept('GET', 'http://localhost:3000/api/saved-searches*', { body: [] });
-    cy.intercept('GET', 'http://localhost:3000/api/history*', { body: [] });
+    cy.intercept('GET', 'http://localhost:3000/api/saved-searches*', { body: [] }).as('getSaved');
+    cy.intercept('GET', 'http://localhost:3000/api/history*', { body: [] }).as('getHistory');
     cy.intercept('POST', 'http://localhost:3000/api/search', { body: { count: 0, results: [] } }).as('emptySearch');
 
     cy.visit('/');
 
-    cy.get('[data-testid="profile-headline"]').type('Frontend Developer');
-    cy.get('[data-testid="exp-title-0"]').type('Dev');
-    cy.get('[data-testid="exp-company-0"]').type('Acme');
-    cy.get('[data-testid="save-profile-btn"]').click();
-    cy.wait('@saveProfile');
+    cy.fillProfile();
   });
 
   it('muestra el estado vacío cuando la búsqueda no retorna resultados', () => {

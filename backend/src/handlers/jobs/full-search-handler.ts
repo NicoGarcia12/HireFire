@@ -3,7 +3,11 @@ import { fullSearchController } from '../../controllers/jobs/full-search-control
 import type { FullSearchInput } from './jobs.schema.js';
 
 /** Flujo completo: obtiene perfil, busca jobs, filtra por idioma, rankea y dispara historial no bloqueante. */
-export async function fullSearchHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function fullSearchHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     // req.body ya viene validado por validateBody(fullSearchSchema)
     const input = req.body as FullSearchInput;

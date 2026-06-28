@@ -1,10 +1,11 @@
 describe('HireFire — filtros de idioma', () => {
   beforeEach(() => {
     cy.intercept('POST', 'http://localhost:3000/api/profile', { fixture: 'profile.json' }).as('saveProfile');
-    cy.intercept('GET', 'http://localhost:3000/api/saved-searches*', { body: [] });
-    cy.intercept('GET', 'http://localhost:3000/api/history*', { body: [] });
+    cy.intercept('GET', 'http://localhost:3000/api/saved-searches*', { body: [] }).as('getSaved');
+    cy.intercept('GET', 'http://localhost:3000/api/history*', { body: [] }).as('getHistory');
 
     cy.visit('/');
+    cy.fillProfile();
   });
 
   it('muestra el selector de idioma con Inglés y Portugués disponibles', () => {
@@ -39,12 +40,6 @@ describe('HireFire — filtros de idioma', () => {
       expect(req.body.allowedLanguages[0].language).to.eq('english');
       req.reply({ body: { count: 0, results: [] } });
     }).as('searchWithLanguage');
-
-    cy.get('[data-testid="profile-headline"]').type('Dev');
-    cy.get('[data-testid="exp-title-0"]').type('Dev');
-    cy.get('[data-testid="exp-company-0"]').type('Co');
-    cy.get('[data-testid="save-profile-btn"]').click();
-    cy.wait('@saveProfile');
 
     cy.get('[data-testid="add-language-button"]').click();
 
