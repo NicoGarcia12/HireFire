@@ -138,12 +138,45 @@ GROQ_API_KEY=gsk_...
 # Backend
 cd backend
 npm ci
-npm run db:push
-# → "Your database is now in sync with your Prisma schema."
+npx prisma migrate deploy   # aplica las migraciones versionadas
+npx prisma generate
+# → "Database schema is up to date!"
 
 # Frontend (en otra terminal)
 cd frontend
 npm ci
+```
+
+> El proyecto usa **migraciones versionadas** (`prisma/migrations/`). Para aplicar el schema usá `prisma migrate deploy`, no `db push`.
+
+#### Crear nuevas migraciones (`prisma migrate dev`)
+
+`prisma migrate dev` necesita una **shadow database** y, por lo tanto, que el usuario de la BD tenga el privilegio `CREATEDB`. Con el usuario por defecto (`hirefire`) falla con `P3014: could not create the shadow database`.
+
+Para habilitarlo, otorgá el permiso **una sola vez** conectándote como superuser de PostgreSQL (`postgres`):
+
+```sql
+ALTER ROLE hirefire WITH CREATEDB;
+```
+
+```bash
+# Ejemplo con psql como superuser
+psql -U postgres -h localhost -c "ALTER ROLE hirefire WITH CREATEDB;"
+```
+
+**Si no podés / no querés dar ese permiso**, generá la migración sin shadow DB:
+
+```bash
+cd backend
+# 1) Generar el SQL del delta (schema previo vs actual)
+npx prisma migrate diff \
+  --from-schema-datamodel <schema-previo>.prisma \
+  --to-schema-datamodel prisma/schema.prisma \
+  --script > prisma/migrations/<timestamp>_<nombre>/migration.sql
+# 2) Aplicarlo a la BD
+npx prisma db execute --schema prisma/schema.prisma --file prisma/migrations/<timestamp>_<nombre>/migration.sql
+# 3) Marcarlo como aplicado en el historial
+npx prisma migrate resolve --applied <timestamp>_<nombre>
 ```
 
 ---
