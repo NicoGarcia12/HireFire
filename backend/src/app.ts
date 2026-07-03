@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import { errorHandler } from './utils/error-handler.js';
+import { applicationsRouter } from './routes/applications.routes.js';
 import { historyRouter } from './routes/history.routes.js';
 import { jobsRouter, searchRouter } from './routes/jobs.routes.js';
 import { linkedInImportRouter, profileRouter } from './routes/profile.routes.js';
@@ -22,6 +23,7 @@ export function createApp() {
   app.use('/api/search', searchRouter);
   app.use('/api/history', historyRouter);
   app.use('/api/saved-searches', savedSearchesRouter);
+  app.use('/api/applications', applicationsRouter);
 
   app.use(errorHandler);
 
