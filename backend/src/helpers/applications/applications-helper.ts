@@ -54,9 +54,7 @@ export async function updateApplication(
     data: {
       ...rest,
       ...(appliedAt !== undefined ? { appliedAt: new Date(appliedAt) } : {}),
-      ...(nextStepAt !== undefined
-        ? { nextStepAt: nextStepAt ? new Date(nextStepAt) : null }
-        : {}),
+      ...(nextStepAt !== undefined ? { nextStepAt: nextStepAt ? new Date(nextStepAt) : null } : {}),
     },
   });
 }
