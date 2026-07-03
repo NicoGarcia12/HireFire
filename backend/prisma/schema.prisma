@@ -8,18 +8,19 @@ datasource db {
 }
 
 model Profile {
-  id           String        @id @default(uuid())
-  headline     String
-  summary      String        @default("")
-  skills       String[]
-  locations    String[]
-  remote       Boolean       @default(false)
-  seniority    String?
-  experience   Experience[]
-  searches     Search[]
+  id            String        @id @default(uuid())
+  headline      String
+  summary       String        @default("")
+  skills        String[]
+  locations     String[]
+  remote        Boolean       @default(false)
+  seniority     String?
+  experience    Experience[]
+  searches      Search[]
   savedSearches SavedSearch[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  applications  Application[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model Experience {
@@ -41,7 +42,7 @@ model Search {
   remote     Boolean  @default(false)
   limit      Int
   count      Int
-  topResults Json     // top 10 resultados para preview
+  topResults Json // top 10 resultados para preview
   createdAt  DateTime @default(now())
 }
 
@@ -56,4 +57,43 @@ model SavedSearch {
   remote    Boolean  @default(false)
   limit     Int      @default(30)
   createdAt DateTime @default(now())
+}
+
+// Postulaciones del usuario: ofertas a las que se postuló (desde HireFire o cargadas a mano)
+model Application {
+  id        String  @id @default(uuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  // Snapshot de la oferta (se copia al postularse; si es manual lo escribe el usuario)
+  title         String
+  company       String
+  location      String?
+  remote        Boolean @default(false)
+  url           String?
+  description   String  @default("")
+  source        String  @default("manual") // 'hirefire' | 'manual'
+  externalJobId String? // id del Job de HireFire si vino de una búsqueda
+
+  // Estado del pipeline
+  status    String   @default("postulado") // postulado|en_proceso|entrevista|oferta|rechazado|descartado
+  appliedAt DateTime @default(now())
+
+  // Campos ampliables (opcionales): se completan más adelante si se quiere
+  salaryAmount    Int?
+  salaryCurrency  String?
+  contractType    String?
+  notes           String    @default("")
+  contactName     String?
+  contactEmail    String?
+  nextStepAt      DateTime?
+  priority        String? // alta|media|baja
+  rejectionReason String?
+  tags            String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([status])
 }
