@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { JobCardComponent } from '../../../shared/job-card/job-card.component';
+import { ApplicationsFacade } from '../../../application/applications/applications.facade';
 import { HomeFacade } from '../../../application/home/home.facade';
 import type { HomeProfilePayload, HomeSearchPayload } from '../../../application/home/home-data.port';
 import { LANGUAGE_LEVELS, type LanguageLevel } from '../../../domain/matching/enums/language-level.enum';
@@ -54,6 +55,7 @@ function csvToArray(value: string): string[] {
 export class Home {
   private readonly fb = inject(FormBuilder);
   private readonly facade = inject(HomeFacade);
+  private readonly applicationsFacade = inject(ApplicationsFacade);
   private readonly dialog = inject(MatDialog);
 
   public readonly profileId = this.facade.profileId;
@@ -109,6 +111,11 @@ export class Home {
     limit: [30],
     allowedLanguages: this.fb.array<FormGroup<AllowedLanguageForm>>([])
   });
+
+  constructor() {
+    const profileId = this.profileId();
+    if (profileId) this.applicationsFacade.load(profileId);
+  }
 
   public get experience(): FormArray {
     return this.profileForm.get('experience') as FormArray;

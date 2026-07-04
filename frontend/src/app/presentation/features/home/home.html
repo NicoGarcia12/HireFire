@@ -374,7 +374,7 @@
           </div>
 
           @for (job of filteredResults(); track job.id) {
-            <hf-job-card [job]="job" />
+            <hf-job-card [job]="job" [profileId]="profileId()" />
           }
 
           @if (filteredResults().length === 0 && minScore() > 0) {
