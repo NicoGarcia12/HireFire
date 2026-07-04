@@ -62,6 +62,12 @@
 
 .hf-muted { color: var(--hf-muted); }
 
+.hf-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
 .hf-board {
   display: flex;
   gap: 1rem;
@@ -121,6 +127,7 @@
 
   &__meta { color: var(--hf-muted); margin: .3rem 0 0; font-size: .82rem; }
   &__date { color: var(--hf-muted); margin: .2rem 0 .6rem; font-size: .78rem; }
+  &__footer { display: flex; align-items: center; justify-content: space-between; }
 }
 
 .hf-status-field {

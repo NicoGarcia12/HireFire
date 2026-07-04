@@ -19,6 +19,10 @@
       <p class="hf-muted">Cargando postulaciones…</p>
     }
 
+    <div class="hf-toolbar">
+      <button mat-stroked-button (click)="openCreateDialog()">+ Cargar postulación manual</button>
+    </div>
+
     <div class="hf-board">
       @for (status of statuses; track status) {
         <section class="hf-column">
@@ -47,9 +51,12 @@
                   </mat-select>
                 </mat-form-field>
 
-                @if (application.url) {
-                  <a mat-button color="primary" [href]="application.url" target="_blank" rel="noopener">Ver oferta ↗</a>
-                }
+                <div class="hf-app-card__footer">
+                  @if (application.url) {
+                    <a mat-button color="primary" [href]="application.url" target="_blank" rel="noopener">Ver oferta ↗</a>
+                  }
+                  <button mat-button (click)="openEditDialog(application)">Editar</button>
+                </div>
               </mat-card>
             } @empty {
               <p class="hf-column__empty">Sin postulaciones</p>
