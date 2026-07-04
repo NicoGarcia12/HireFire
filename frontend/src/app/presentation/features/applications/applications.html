@@ -1,0 +1,63 @@
+<div class="hf-page">
+
+  <header class="hf-hero">
+    <a routerLink="/" class="hf-back">← Volver al Home</a>
+    <h1>Postulaciones 📋</h1>
+    <p>Seguí tus postulaciones a través del pipeline, de postulado a oferta.</p>
+  </header>
+
+  @if (!profileId()) {
+    <div class="hf-alert">
+      Todavía no guardaste tu perfil. <a routerLink="/">Volvé al Home</a> para crear uno primero.
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="hf-alert">{{ error() }}</div>
+    }
+
+    @if (loading()) {
+      <p class="hf-muted">Cargando postulaciones…</p>
+    }
+
+    <div class="hf-board">
+      @for (status of statuses; track status) {
+        <section class="hf-column">
+          <header class="hf-column__head">
+            <h2>{{ statusLabels[status] }}</h2>
+            <span class="hf-pill">{{ byStatus()[status].length }}</span>
+          </header>
+
+          <div class="hf-column__body">
+            @for (application of byStatus()[status]; track application.id) {
+              <mat-card class="hf-app-card">
+                <h3>{{ application.title }}</h3>
+                <p class="hf-app-card__meta">
+                  {{ application.company }}
+                  @if (application.location) { · {{ application.location }} }
+                  @if (application.remote) { <span class="hf-tag">Remoto</span> }
+                </p>
+                <p class="hf-app-card__date">Postulado el {{ application.appliedAt | date: 'dd/MM/yyyy' }}</p>
+
+                <mat-form-field appearance="outline" class="hf-status-field">
+                  <mat-label>Estado</mat-label>
+                  <mat-select [value]="application.status" (selectionChange)="onStatusChange(application, $event)">
+                    @for (option of statuses; track option) {
+                      <mat-option [value]="option">{{ statusLabels[option] }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                @if (application.url) {
+                  <a mat-button color="primary" [href]="application.url" target="_blank" rel="noopener">Ver oferta ↗</a>
+                }
+              </mat-card>
+            } @empty {
+              <p class="hf-column__empty">Sin postulaciones</p>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  }
+
+</div>
