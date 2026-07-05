@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSliderModule } from '@angular/material/slider';
+import { MatSlider, MatSliderThumb } from '@angular/material/slider';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatOptionModule } from '@angular/material/core';
@@ -51,7 +51,8 @@ function csvToArray(value: string): string[] {
     MatSelectModule,
     MatOptionModule,
     MatDialogModule,
-    MatSliderModule,
+    MatSlider,
+    MatSliderThumb,
     JobCardComponent,
   ],
   templateUrl: './home.html',

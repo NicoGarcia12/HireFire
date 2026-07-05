@@ -1,94 +1,67 @@
-import { afterEach, beforeEach, describe, it, mock } from 'node:test';
-import assert from 'node:assert/strict';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Profile, SaveProfileInput } from '../src/types/profile.types.js';
 
-const calls = {
-  findUnique: [] as unknown[],
-  findMany: [] as unknown[],
-  update: [] as unknown[],
-  create: [] as unknown[],
-  deleteMany: [] as unknown[],
-};
+const mocks = vi.hoisted(() => {
+  const profileRow = {
+    id: 'profile-1',
+    headline: 'Backend Developer',
+    summary: 'Experienced dev',
+    skills: ['Node.js'],
+    locations: ['CABA'],
+    remote: true,
+    seniority: 'senior',
+    experience: [{ title: 'Dev', company: 'Acme', description: 'Built things' }],
+  };
+  return {
+    profileRow,
+    findUnique: vi.fn(async (args: { where: { id: string } }) =>
+      args.where.id === 'missing-profile' ? null : profileRow,
+    ),
+    findMany: vi.fn(async () => [profileRow]),
+    update: vi.fn(async () => profileRow),
+    create: vi.fn(async () => profileRow),
+    deleteMany: vi.fn(async () => undefined),
+    analyzeProfileWithGroq: vi.fn(async () => ({ score: 80, strengths: [], suggestions: [] })),
+  };
+});
 
-const profileRow = {
-  id: 'profile-1',
-  headline: 'Backend Developer',
-  summary: 'Experienced dev',
-  skills: ['Node.js'],
-  locations: ['CABA'],
-  remote: true,
-  seniority: 'senior',
-  experience: [{ title: 'Dev', company: 'Acme', description: 'Built things' }],
-};
-
-mock.module('../src/config/db.js', {
-  namedExports: {
-    prisma: {
-      profile: {
-        findUnique: async (args: { where: { id: string } }) => {
-          calls.findUnique.push(args);
-          return args.where.id === 'missing-profile' ? null : profileRow;
-        },
-        findMany: async (args: unknown) => {
-          calls.findMany.push(args);
-          return [profileRow];
-        },
-        update: async (args: unknown) => {
-          calls.update.push(args);
-          return profileRow;
-        },
-        create: async (args: unknown) => {
-          calls.create.push(args);
-          return profileRow;
-        },
-      },
-      experience: {
-        deleteMany: async (args: unknown) => {
-          calls.deleteMany.push(args);
-        },
-      },
+vi.mock('../src/config/db.js', () => ({
+  prisma: {
+    profile: {
+      findUnique: mocks.findUnique,
+      findMany: mocks.findMany,
+      update: mocks.update,
+      create: mocks.create,
     },
+    experience: { deleteMany: mocks.deleteMany },
   },
-});
+}));
 
-mock.module('../src/controllers/matching/groq-analysis-controller.js', {
-  namedExports: {
-    analyzeProfileWithGroq: async () => ({ score: 80, strengths: [], suggestions: [] }),
-  },
-});
+vi.mock('../src/controllers/matching/groq-analysis-controller.js', () => ({
+  analyzeProfileWithGroq: mocks.analyzeProfileWithGroq,
+}));
 
-const { findProfileById, findAllProfiles } =
-  await import('../src/helpers/profile/find-profile-helper.js');
-const { upsertProfile } = await import('../src/helpers/profile/upsert-profile-helper.js');
-const { saveProfileController } =
-  await import('../src/controllers/profile/save-profile-controller.js');
-const { getProfileController } =
-  await import('../src/controllers/profile/get-profile-controller.js');
-const { analyzeProfileController } =
-  await import('../src/controllers/profile/analyze-profile-controller.js');
+import { findProfileById, findAllProfiles } from '../src/helpers/profile/find-profile-helper.js';
+import { upsertProfile } from '../src/helpers/profile/upsert-profile-helper.js';
+import { saveProfileController } from '../src/controllers/profile/save-profile-controller.js';
+import { getProfileController } from '../src/controllers/profile/get-profile-controller.js';
+import { analyzeProfileController } from '../src/controllers/profile/analyze-profile-controller.js';
 
 beforeEach(() => {
-  calls.findUnique = [];
-  calls.findMany = [];
-  calls.update = [];
-  calls.create = [];
-  calls.deleteMany = [];
-});
-
-afterEach(() => {
-  mock.reset();
+  mocks.findUnique.mockClear();
+  mocks.findMany.mockClear();
+  mocks.update.mockClear();
+  mocks.create.mockClear();
+  mocks.deleteMany.mockClear();
+  mocks.analyzeProfileWithGroq.mockClear();
 });
 
 describe('findProfileById()', () => {
   it('maps the Prisma row to the domain Profile shape', async () => {
     const profile = (await findProfileById('profile-1')) as Profile;
 
-    assert.equal(profile.id, 'profile-1');
-    assert.deepEqual(profile.preferences, {
-      locations: ['CABA'],
-      remote: true,
-      seniority: 'senior',
-    });
+    expect(profile.id).toBe('profile-1');
+    expect(profile.preferences).toEqual({ locations: ['CABA'], remote: true, seniority: 'senior' });
   });
 });
 
@@ -96,8 +69,8 @@ describe('findAllProfiles()', () => {
   it('returns every profile mapped to the domain shape', async () => {
     const profiles = await findAllProfiles();
 
-    assert.equal(profiles.length, 1);
-    assert.equal(profiles[0]?.id, 'profile-1');
+    expect(profiles.length).toBe(1);
+    expect(profiles[0]?.id).toBe('profile-1');
   });
 });
 
@@ -113,8 +86,8 @@ describe('upsertProfile()', () => {
 
     await upsertProfile(input);
 
-    assert.equal(calls.create.length, 1);
-    assert.equal(calls.update.length, 0);
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 
   it('replaces the experience and updates the existing profile when an id is given', async () => {
@@ -129,8 +102,8 @@ describe('upsertProfile()', () => {
 
     await upsertProfile(input);
 
-    assert.equal(calls.deleteMany.length, 1);
-    assert.equal(calls.update.length, 1);
+    expect(mocks.deleteMany).toHaveBeenCalledTimes(1);
+    expect(mocks.update).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -144,7 +117,7 @@ describe('saveProfileController()', () => {
       preferences: { locations: [], remote: false },
     });
 
-    assert.equal(calls.create.length, 1);
+    expect(mocks.create).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -152,7 +125,7 @@ describe('getProfileController()', () => {
   it('delegates to findProfileById', async () => {
     const profile = await getProfileController('profile-1');
 
-    assert.equal(profile?.id, 'profile-1');
+    expect(profile?.id).toBe('profile-1');
   });
 });
 
@@ -160,13 +133,13 @@ describe('analyzeProfileController()', () => {
   it('returns found:false when the profile does not exist', async () => {
     const result = await analyzeProfileController('missing-profile');
 
-    assert.deepEqual(result, { found: false });
+    expect(result).toEqual({ found: false });
   });
 
   it('returns found:true with the Groq analysis when the profile exists', async () => {
     const result = await analyzeProfileController('profile-1');
 
-    assert.equal(result.found, true);
-    if (result.found) assert.equal(result.analysis.score, 80);
+    expect(result.found).toBe(true);
+    if (result.found) expect(result.analysis.score).toBe(80);
   });
 });

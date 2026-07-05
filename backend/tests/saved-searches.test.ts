@@ -1,56 +1,45 @@
-import { afterEach, beforeEach, describe, it, mock } from 'node:test';
-import assert from 'node:assert/strict';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CreateSavedSearchInput } from '../src/types/saved-search.types.js';
 
-const calls = { create: [] as unknown[], findMany: [] as unknown[], delete: [] as unknown[] };
-
-const savedSearchRow = {
-  id: 'saved-1',
-  profileId: 'profile-1',
-  name: 'Backend roles',
-  keywords: 'backend',
-  location: null,
-  remote: true,
-  limit: 30,
-  createdAt: new Date('2026-01-01'),
-};
-
-mock.module('../src/config/db.js', {
-  namedExports: {
-    prisma: {
-      savedSearch: {
-        create: async (args: unknown) => {
-          calls.create.push(args);
-          return savedSearchRow;
-        },
-        findMany: async (args: unknown) => {
-          calls.findMany.push(args);
-          return [savedSearchRow];
-        },
-        delete: async (args: unknown) => {
-          calls.delete.push(args);
-        },
-      },
-    },
-  },
+const mocks = vi.hoisted(() => {
+  const savedSearchRow = {
+    id: 'saved-1',
+    profileId: 'profile-1',
+    name: 'Backend roles',
+    keywords: 'backend',
+    location: null,
+    remote: true,
+    limit: 30,
+    createdAt: new Date('2026-01-01'),
+  };
+  return {
+    savedSearchRow,
+    create: vi.fn(async () => savedSearchRow),
+    findMany: vi.fn(async () => [savedSearchRow]),
+    delete: vi.fn(async () => undefined),
+  };
 });
 
-const { createSavedSearch, listSavedSearchesByProfile, deleteSavedSearch } =
-  await import('../src/helpers/saved-searches/saved-searches-helper.js');
-const { createSavedSearchController } =
-  await import('../src/controllers/saved-searches/create-saved-search-controller.js');
-const { listSavedSearchesController } =
-  await import('../src/controllers/saved-searches/list-saved-searches-controller.js');
-const { deleteSavedSearchController } =
-  await import('../src/controllers/saved-searches/delete-saved-search-controller.js');
+vi.mock('../src/config/db.js', () => ({
+  prisma: {
+    savedSearch: { create: mocks.create, findMany: mocks.findMany, delete: mocks.delete },
+  },
+}));
+
+import {
+  createSavedSearch,
+  listSavedSearchesByProfile,
+  deleteSavedSearch,
+} from '../src/helpers/saved-searches/saved-searches-helper.js';
+import { createSavedSearchController } from '../src/controllers/saved-searches/create-saved-search-controller.js';
+import { listSavedSearchesController } from '../src/controllers/saved-searches/list-saved-searches-controller.js';
+import { deleteSavedSearchController } from '../src/controllers/saved-searches/delete-saved-search-controller.js';
 
 beforeEach(() => {
-  calls.create = [];
-  calls.findMany = [];
-  calls.delete = [];
+  mocks.create.mockClear();
+  mocks.findMany.mockClear();
+  mocks.delete.mockClear();
 });
-
-afterEach(() => mock.reset());
 
 describe('createSavedSearch()', () => {
   it('creates a saved search defaulting an absent location to null', async () => {
@@ -64,7 +53,7 @@ describe('createSavedSearch()', () => {
 
     await createSavedSearch(input);
 
-    assert.equal((calls.create[0] as { data: { location: null } }).data.location, null);
+    expect(mocks.create.mock.calls[0]?.[0].data.location).toBe(null);
   });
 });
 
@@ -72,11 +61,8 @@ describe('listSavedSearchesByProfile()', () => {
   it('lists saved searches ordered by most recent first', async () => {
     const result = await listSavedSearchesByProfile('profile-1');
 
-    assert.equal(result.length, 1);
-    assert.equal(
-      (calls.findMany[0] as { orderBy: { createdAt: string } }).orderBy.createdAt,
-      'desc',
-    );
+    expect(result.length).toBe(1);
+    expect(mocks.findMany.mock.calls[0]?.[0].orderBy.createdAt).toBe('desc');
   });
 });
 
@@ -84,7 +70,7 @@ describe('deleteSavedSearch()', () => {
   it('deletes the saved search by id', async () => {
     await deleteSavedSearch('saved-1');
 
-    assert.deepEqual(calls.delete[0], { where: { id: 'saved-1' } });
+    expect(mocks.delete).toHaveBeenCalledWith({ where: { id: 'saved-1' } });
   });
 });
 
@@ -98,18 +84,18 @@ describe('saved-searches controllers', () => {
       limit: 10,
     });
 
-    assert.equal(calls.create.length, 1);
+    expect(mocks.create).toHaveBeenCalledTimes(1);
   });
 
   it('listSavedSearchesController() delegates to the helper', async () => {
     await listSavedSearchesController('profile-1');
 
-    assert.equal(calls.findMany.length, 1);
+    expect(mocks.findMany).toHaveBeenCalledTimes(1);
   });
 
   it('deleteSavedSearchController() delegates to the helper', async () => {
     await deleteSavedSearchController('saved-1');
 
-    assert.equal(calls.delete.length, 1);
+    expect(mocks.delete).toHaveBeenCalledTimes(1);
   });
 });

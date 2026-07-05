@@ -473,44 +473,46 @@
       }
 
       <!-- ══════════════════ RESULTADOS ══════════════════ -->
-      @if (results().length > 0) {
-        <section class="hf-results" data-testid="results-section">
-          <div class="hf-results__head">
-            <h2>
-              Resultados
-              @if (minScore() > 0) {
-                <span class="hf-results__count"
-                  >{{ filteredResults().length }}/{{ results().length }}</span
-                >
-              } @else {
-                <span class="hf-results__count">{{ results().length }}</span>
-              }
-            </h2>
-            <button type="button" mat-stroked-button (click)="exportResults()">
-              ⬇ Exportar CSV
-            </button>
-          </div>
-
-          <div class="hf-score-filter">
-            <span class="hf-muted"
-              >Score mínimo: <strong>{{ minScore() }}</strong></span
-            >
-            <mat-slider min="0" max="100" step="5" [displayWith]="scoreLabel">
-              <input matSliderThumb [value]="minScore()" (valueChange)="minScore.set($event)" />
-            </mat-slider>
-          </div>
-
-          @for (job of filteredResults(); track job.id) {
-            <hf-job-card [job]="job" />
-          }
-
-          @if (filteredResults().length === 0 && minScore() > 0) {
-            <div class="hf-empty-state">
-              <p class="hf-empty-state__title">Sin resultados con score ≥ {{ minScore() }}</p>
-              <p class="hf-muted">Bajá el umbral del slider para ver más ofertas.</p>
+      @defer (when results().length > 0) {
+        @if (results().length > 0) {
+          <section class="hf-results" data-testid="results-section">
+            <div class="hf-results__head">
+              <h2>
+                Resultados
+                @if (minScore() > 0) {
+                  <span class="hf-results__count"
+                    >{{ filteredResults().length }}/{{ results().length }}</span
+                  >
+                } @else {
+                  <span class="hf-results__count">{{ results().length }}</span>
+                }
+              </h2>
+              <button type="button" mat-stroked-button (click)="exportResults()">
+                ⬇ Exportar CSV
+              </button>
             </div>
-          }
-        </section>
+
+            <div class="hf-score-filter">
+              <span class="hf-muted"
+                >Score mínimo: <strong>{{ minScore() }}</strong></span
+              >
+              <mat-slider min="0" max="100" step="5" [displayWith]="scoreLabel">
+                <input matSliderThumb [value]="minScore()" (valueChange)="minScore.set($event)" />
+              </mat-slider>
+            </div>
+
+            @for (job of filteredResults(); track job.id) {
+              <hf-job-card [job]="job" />
+            }
+
+            @if (filteredResults().length === 0 && minScore() > 0) {
+              <div class="hf-empty-state">
+                <p class="hf-empty-state__title">Sin resultados con score ≥ {{ minScore() }}</p>
+                <p class="hf-muted">Bajá el umbral del slider para ver más ofertas.</p>
+              </div>
+            }
+          </section>
+        }
       }
 
       <!-- ══════════════════ SIN RESULTADOS ══════════════════ -->

@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, expect, it } from 'vitest';
 import AdmZip from 'adm-zip';
 import { parseLinkedInZip } from '../src/utils/linkedin-profile-parser.js';
 
@@ -19,8 +18,8 @@ describe('parseLinkedInZip() — profile', () => {
 
     const result = parseLinkedInZip(buffer);
 
-    assert.equal(result.headline, 'Backend Developer');
-    assert.equal(result.summary, 'Builds APIs');
+    expect(result.headline).toBe('Backend Developer');
+    expect(result.summary).toBe('Builds APIs');
   });
 
   it('finds Profile.csv even nested in a subfolder, case-insensitively', () => {
@@ -30,7 +29,7 @@ describe('parseLinkedInZip() — profile', () => {
 
     const result = parseLinkedInZip(buffer);
 
-    assert.equal(result.headline, 'QA Engineer');
+    expect(result.headline).toBe('QA Engineer');
   });
 });
 
@@ -40,7 +39,7 @@ describe('parseLinkedInZip() — skills', () => {
 
     const result = parseLinkedInZip(buffer);
 
-    assert.deepEqual(result.skills, ['Node.js', 'TypeScript']);
+    expect(result.skills).toEqual(['Node.js', 'TypeScript']);
   });
 });
 
@@ -52,7 +51,7 @@ describe('parseLinkedInZip() — positions', () => {
 
     const result = parseLinkedInZip(buffer);
 
-    assert.deepEqual(result.experience, [
+    expect(result.experience).toEqual([
       { title: 'Dev', company: 'Acme', description: 'Built things' },
     ]);
   });
@@ -64,7 +63,7 @@ describe('parseLinkedInZip() — positions', () => {
 
     const result = parseLinkedInZip(buffer);
 
-    assert.deepEqual(result.experience, []);
+    expect(result.experience).toEqual([]);
   });
 });
 
@@ -74,7 +73,7 @@ describe('parseLinkedInZip() — resilience', () => {
 
     const result = parseLinkedInZip(buffer);
 
-    assert.deepEqual(result, {
+    expect(result).toEqual({
       headline: '',
       summary: '',
       skills: [],
@@ -88,6 +87,6 @@ describe('parseLinkedInZip() — resilience', () => {
 
     const result = parseLinkedInZip(buffer);
 
-    assert.deepEqual(result.skills, []);
+    expect(result.skills).toEqual([]);
   });
 });

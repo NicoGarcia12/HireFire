@@ -1,9 +1,6 @@
-import { afterEach, beforeEach, describe, it, mock } from 'node:test';
-import assert from 'node:assert/strict';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SaveSearchHistoryInput } from '../src/types/history.types.js';
 import type { MatchResult } from '../src/types/matching.types.js';
-
-const calls = { create: [] as unknown[], findMany: [] as unknown[], delete: [] as unknown[] };
 
 function job(id: string): MatchResult {
   return {
@@ -20,40 +17,29 @@ function job(id: string): MatchResult {
   };
 }
 
-mock.module('../src/config/db.js', {
-  namedExports: {
-    prisma: {
-      search: {
-        create: async (args: unknown) => {
-          calls.create.push(args);
-          return { id: 'history-1' };
-        },
-        findMany: async (args: unknown) => {
-          calls.findMany.push(args);
-          return [];
-        },
-        delete: async (args: unknown) => {
-          calls.delete.push(args);
-        },
-      },
-    },
-  },
-});
+const mocks = vi.hoisted(() => ({
+  create: vi.fn(async () => ({ id: 'history-1' })),
+  findMany: vi.fn(async () => []),
+  delete: vi.fn(async () => undefined),
+}));
 
-const { saveSearchHistory, listSearchHistoryByProfile, deleteSearchHistory } =
-  await import('../src/helpers/history/search-history-helper.js');
-const { listHistoryController } =
-  await import('../src/controllers/history/list-history-controller.js');
-const { deleteHistoryController } =
-  await import('../src/controllers/history/delete-history-controller.js');
+vi.mock('../src/config/db.js', () => ({
+  prisma: { search: { create: mocks.create, findMany: mocks.findMany, delete: mocks.delete } },
+}));
+
+import {
+  saveSearchHistory,
+  listSearchHistoryByProfile,
+  deleteSearchHistory,
+} from '../src/helpers/history/search-history-helper.js';
+import { listHistoryController } from '../src/controllers/history/list-history-controller.js';
+import { deleteHistoryController } from '../src/controllers/history/delete-history-controller.js';
 
 beforeEach(() => {
-  calls.create = [];
-  calls.findMany = [];
-  calls.delete = [];
+  mocks.create.mockClear();
+  mocks.findMany.mockClear();
+  mocks.delete.mockClear();
 });
-
-afterEach(() => mock.reset());
 
 describe('saveSearchHistory()', () => {
   it('stores only the top 10 results but keeps the full result count', async () => {
@@ -68,9 +54,9 @@ describe('saveSearchHistory()', () => {
 
     await saveSearchHistory(input);
 
-    const data = (calls.create[0] as { data: { count: number; topResults: unknown[] } }).data;
-    assert.equal(data.count, 15);
-    assert.equal(data.topResults.length, 10);
+    const data = mocks.create.mock.calls[0]?.[0].data;
+    expect(data.count).toBe(15);
+    expect(data.topResults.length).toBe(10);
   });
 });
 
@@ -78,9 +64,9 @@ describe('listSearchHistoryByProfile()', () => {
   it('lists at most the 30 most recent entries for a profile', async () => {
     await listSearchHistoryByProfile('profile-1');
 
-    const args = calls.findMany[0] as { where: { profileId: string }; take: number };
-    assert.equal(args.where.profileId, 'profile-1');
-    assert.equal(args.take, 30);
+    const args = mocks.findMany.mock.calls[0]?.[0];
+    expect(args.where.profileId).toBe('profile-1');
+    expect(args.take).toBe(30);
   });
 });
 
@@ -88,7 +74,7 @@ describe('deleteSearchHistory()', () => {
   it('deletes the history entry by id', async () => {
     await deleteSearchHistory('history-1');
 
-    assert.deepEqual(calls.delete[0], { where: { id: 'history-1' } });
+    expect(mocks.delete).toHaveBeenCalledWith({ where: { id: 'history-1' } });
   });
 });
 
@@ -96,12 +82,12 @@ describe('history controllers', () => {
   it('listHistoryController() delegates to the helper', async () => {
     await listHistoryController('profile-1');
 
-    assert.equal(calls.findMany.length, 1);
+    expect(mocks.findMany).toHaveBeenCalledTimes(1);
   });
 
   it('deleteHistoryController() delegates to the helper', async () => {
     await deleteHistoryController('history-1');
 
-    assert.equal(calls.delete.length, 1);
+    expect(mocks.delete).toHaveBeenCalledTimes(1);
   });
 });

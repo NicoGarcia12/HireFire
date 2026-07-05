@@ -1,10 +1,6 @@
-import { afterEach, beforeEach, describe, it, mock } from 'node:test';
-import assert from 'node:assert/strict';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Job } from '../src/types/job.types.js';
 import type { Profile } from '../src/types/profile.types.js';
-
-const calls: { chatCreate: unknown[] } = { chatCreate: [] };
-let nextResponseText = '';
 
 const profile: Profile = {
   id: 'profile-1',
@@ -27,46 +23,40 @@ function job(id: string): Job {
   };
 }
 
-mock.module('../src/config/env.js', {
-  namedExports: {
-    env: {
-      port: 3000,
-      databaseUrl: 'postgres://fake',
-      apify: { token: 'fake-token', jobsActor: 'fake-actor' },
-      groq: { apiKey: 'fake-key', baseUrl: 'https://fake', model: 'fake-model' },
-    },
-  },
+const mocks = vi.hoisted(() => {
+  const state = { nextResponseText: '' };
+  return {
+    state,
+    chatCreate: vi.fn(async () => ({
+      choices: [{ message: { content: state.nextResponseText } }],
+    })),
+  };
 });
 
-mock.module('../src/utils/groq-client.js', {
-  namedExports: {
-    groq: {
-      chat: {
-        completions: {
-          create: async (args: unknown) => {
-            calls.chatCreate.push(args);
-            return { choices: [{ message: { content: nextResponseText } }] };
-          },
-        },
-      },
-    },
+vi.mock('../src/config/env.js', () => ({
+  env: {
+    port: 3000,
+    databaseUrl: 'postgres://fake',
+    apify: { token: 'fake-token', jobsActor: 'fake-actor' },
+    groq: { apiKey: 'fake-key', baseUrl: 'https://fake', model: 'fake-model' },
   },
-});
+}));
 
-const { rankJobsController } = await import('../src/controllers/matching/rank-jobs-controller.js');
-const { analyzeProfileWithGroq } =
-  await import('../src/controllers/matching/groq-analysis-controller.js');
+vi.mock('../src/utils/groq-client.js', () => ({
+  groq: { chat: { completions: { create: mocks.chatCreate } } },
+}));
+
+import { rankJobsController } from '../src/controllers/matching/rank-jobs-controller.js';
+import { analyzeProfileWithGroq } from '../src/controllers/matching/groq-analysis-controller.js';
 
 beforeEach(() => {
-  calls.chatCreate = [];
-  nextResponseText = '';
+  mocks.chatCreate.mockClear();
+  mocks.state.nextResponseText = '';
 });
-
-afterEach(() => mock.reset());
 
 describe('rankJobsController()', () => {
   it('scores jobs from the model response and sorts descending by score', async () => {
-    nextResponseText = JSON.stringify({
+    mocks.state.nextResponseText = JSON.stringify({
       results: [
         { id: 'a', score: 40, reasons: ['ok'], gaps: [] },
         { id: 'b', score: 90, reasons: ['great fit'], gaps: [] },
@@ -75,63 +65,66 @@ describe('rankJobsController()', () => {
 
     const results = await rankJobsController(profile, [job('a'), job('b')]);
 
-    assert.deepEqual(
-      results.map((r) => r.id),
-      ['b', 'a'],
-    );
-    assert.equal(results[0]?.score, 90);
+    expect(results.map((r) => r.id)).toEqual(['b', 'a']);
+    expect(results[0]?.score).toBe(90);
   });
 
   it('defaults score/reasons/gaps to safe values when the model omits a job', async () => {
-    nextResponseText = JSON.stringify({ results: [{ id: 'a', score: 70, reasons: [], gaps: [] }] });
+    mocks.state.nextResponseText = JSON.stringify({
+      results: [{ id: 'a', score: 70, reasons: [], gaps: [] }],
+    });
 
     const results = await rankJobsController(profile, [job('a'), job('b')]);
     const missing = results.find((r) => r.id === 'b');
 
-    assert.deepEqual(missing, { ...job('b'), score: 0, reasons: [], gaps: [] });
+    expect(missing).toEqual({ ...job('b'), score: 0, reasons: [], gaps: [] });
   });
 
   it('batches jobs in groups of 8, issuing one model call per batch', async () => {
-    nextResponseText = JSON.stringify({ results: [] });
+    mocks.state.nextResponseText = JSON.stringify({ results: [] });
     const jobs = Array.from({ length: 9 }, (_, i) => job(`job-${i}`));
 
     await rankJobsController(profile, jobs);
 
-    assert.equal(calls.chatCreate.length, 2);
+    expect(mocks.chatCreate).toHaveBeenCalledTimes(2);
   });
 
   it('tolerates unparsable model output by scoring everything as 0', async () => {
-    nextResponseText = 'not json at all';
+    mocks.state.nextResponseText = 'not json at all';
 
     const results = await rankJobsController(profile, [job('a')]);
 
-    assert.equal(results[0]?.score, 0);
+    expect(results[0]?.score).toBe(0);
   });
 });
 
 describe('analyzeProfileWithGroq()', () => {
   it('returns the parsed analysis when the model responds with valid JSON', async () => {
-    nextResponseText = JSON.stringify({ score: 85, strengths: ['strong skills'], suggestions: [] });
+    mocks.state.nextResponseText = JSON.stringify({
+      score: 85,
+      strengths: ['strong skills'],
+      suggestions: [],
+    });
 
     const analysis = await analyzeProfileWithGroq(profile);
 
-    assert.equal(analysis.score, 85);
-    assert.deepEqual(analysis.strengths, ['strong skills']);
+    expect(analysis.score).toBe(85);
+    expect(analysis.strengths).toEqual(['strong skills']);
   });
 
   it('returns a safe empty analysis when the model response has no JSON braces', async () => {
-    nextResponseText = 'sorry, I cannot help with that';
+    mocks.state.nextResponseText = 'sorry, I cannot help with that';
 
     const analysis = await analyzeProfileWithGroq(profile);
 
-    assert.deepEqual(analysis, { score: 0, strengths: [], suggestions: [] });
+    expect(analysis).toEqual({ score: 0, strengths: [], suggestions: [] });
   });
 
   it('returns a safe empty analysis when the JSON is malformed', async () => {
-    nextResponseText = '{ "score": 10, invalid }';
+    mocks.state.nextResponseText = '{ "score": 10, invalid }';
 
     const analysis = await analyzeProfileWithGroq(profile);
 
-    assert.deepEqual(analysis, { score: 0, strengths: [], suggestions: [] });
+    expect(analysis).toEqual({ score: 0, strengths: [], suggestions: [] });
   });
 });
