@@ -160,3 +160,84 @@ describe('Home search language filters', () => {
     });
   });
 });
+
+describe('Home dark/light theme toggle', () => {
+  let fixture: ComponentFixture<Home>;
+  let component: Home;
+  let homeDataPortMock: HomeDataPortMock;
+
+  beforeEach(async () => {
+    localStorage.removeItem('hirefire_theme');
+    document.documentElement.classList.remove('light-mode');
+
+    homeDataPortMock = {
+      search: () => of({ count: 0, results: [] }),
+      getHistory: () => of([]),
+      getSavedSearches: () => of([]),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [Home],
+      providers: [
+        provideZonelessChangeDetection(),
+        { provide: HomeDataPort, useValue: homeDataPortMock },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(Home);
+    component = fixture.componentInstance;
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('hirefire_theme');
+    document.documentElement.classList.remove('light-mode');
+  });
+
+  it('starts in dark mode by default without a stored preference', () => {
+    fixture.detectChanges();
+
+    expect(component.isDarkMode()).toBe(true);
+    expect(document.documentElement.classList.contains('light-mode')).toBe(false);
+  });
+
+  it('switches to light mode and persists the preference', () => {
+    fixture.detectChanges();
+
+    component.toggleTheme();
+
+    expect(component.isDarkMode()).toBe(false);
+    expect(document.documentElement.classList.contains('light-mode')).toBe(true);
+    expect(localStorage.getItem('hirefire_theme')).toBe('light');
+  });
+
+  it('switches back to dark mode on a second toggle', () => {
+    fixture.detectChanges();
+
+    component.toggleTheme();
+    component.toggleTheme();
+
+    expect(component.isDarkMode()).toBe(true);
+    expect(document.documentElement.classList.contains('light-mode')).toBe(false);
+    expect(localStorage.getItem('hirefire_theme')).toBe('dark');
+  });
+
+  it('restores light mode from a stored preference on init', async () => {
+    localStorage.setItem('hirefire_theme', 'light');
+
+    await TestBed.resetTestingModule()
+      .configureTestingModule({
+        imports: [Home],
+        providers: [
+          provideZonelessChangeDetection(),
+          { provide: HomeDataPort, useValue: homeDataPortMock },
+        ],
+      })
+      .compileComponents();
+
+    const reloadedFixture = TestBed.createComponent(Home);
+    reloadedFixture.detectChanges();
+
+    expect(reloadedFixture.componentInstance.isDarkMode()).toBe(false);
+    expect(document.documentElement.classList.contains('light-mode')).toBe(true);
+  });
+});

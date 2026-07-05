@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { JobCardComponent } from '../../../shared/job-card/job-card.component';
 import { HomeFacade } from '../../../application/home/home.facade';
+import { StorageService } from '../../../core/storage.service';
 import type {
   HomeProfilePayload,
   HomeSearchPayload,
@@ -27,6 +28,8 @@ import type { LinkedInImport } from '../../../domain/profile/models/linkedin-imp
 import type { SavedSearch } from '../../../domain/search/models/saved-search.model';
 import type { SearchRecord } from '../../../domain/search/models/search-record.model';
 import type { AllowedLanguageForm, AvailableLanguageOption, SearchRunParams } from './home.types';
+
+const THEME_STORAGE_KEY = 'hirefire_theme';
 
 function csvToArray(value: string): string[] {
   return value
@@ -59,6 +62,9 @@ export class Home {
   private readonly fb = inject(FormBuilder);
   private readonly facade = inject(HomeFacade);
   private readonly dialog = inject(MatDialog);
+  private readonly storage = inject(StorageService);
+
+  public readonly isDarkMode = signal(this.storage.get(THEME_STORAGE_KEY) !== 'light');
 
   public readonly profileId = this.facade.profileId;
   public readonly error = this.facade.error;
@@ -125,6 +131,17 @@ export class Home {
 
   public get allowedLanguages(): FormArray<FormGroup<AllowedLanguageForm>> {
     return this.searchForm.controls.allowedLanguages;
+  }
+
+  constructor() {
+    document.documentElement.classList.toggle('light-mode', !this.isDarkMode());
+  }
+
+  public toggleTheme(): void {
+    const next = !this.isDarkMode();
+    this.isDarkMode.set(next);
+    document.documentElement.classList.toggle('light-mode', !next);
+    this.storage.set(THEME_STORAGE_KEY, next ? 'dark' : 'light');
   }
 
   public addExp(): void {
