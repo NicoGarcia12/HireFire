@@ -13,8 +13,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { JobCardComponent } from '../../../shared/job-card/job-card.component';
 import { HomeFacade } from '../../../application/home/home.facade';
-import type { HomeProfilePayload, HomeSearchPayload } from '../../../application/home/home-data.port';
-import { LANGUAGE_LEVELS, type LanguageLevel } from '../../../domain/matching/enums/language-level.enum';
+import type {
+  HomeProfilePayload,
+  HomeSearchPayload,
+} from '../../../application/home/home-data.port';
+import {
+  LANGUAGE_LEVELS,
+  type LanguageLevel,
+} from '../../../domain/matching/enums/language-level.enum';
 import type { AllowedLanguage } from '../../../domain/matching/models/allowed-language.model';
 import type { AllowedLanguageCode } from '../../../domain/matching/types/allowed-language-code.type';
 import type { LinkedInImport } from '../../../domain/profile/models/linkedin-import.model';
@@ -47,7 +53,7 @@ function csvToArray(value: string): string[] {
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Home {
   private readonly fb = inject(FormBuilder);
@@ -69,7 +75,7 @@ export class Home {
 
   public readonly minScore = signal(0);
   public readonly filteredResults = computed(() =>
-    this.results().filter(j => j.score >= this.minScore())
+    this.results().filter((j) => j.score >= this.minScore()),
   );
 
   public readonly profileForm = this.fb.group({
@@ -79,7 +85,7 @@ export class Home {
     locations: [''],
     remote: [true],
     seniority: [''],
-    experience: this.fb.array([this.newExp()])
+    experience: this.fb.array([this.newExp()]),
   });
 
   public readonly showSaveDialog = signal(false);
@@ -88,7 +94,10 @@ export class Home {
   public readonly languageLevels: readonly LanguageLevel[] = LANGUAGE_LEVELS;
   public readonly languageOptions: readonly AvailableLanguageOption[] = [
     { code: 'english', label: 'Inglés' },
-    { code: 'portuguese', label: 'Portugués' }
+    { code: 'portuguese', label: 'Portugués' },
+    { code: 'spanish', label: 'Español' },
+    { code: 'french', label: 'Francés' },
+    { code: 'german', label: 'Alemán' },
   ];
   public readonly selectedLanguage = signal<AllowedLanguageCode>('english');
   // FormArray no emite cambios estructurales como dependencia de computed(); este contador
@@ -96,7 +105,9 @@ export class Home {
   public readonly allowedLanguagesVersion = signal(0);
   public readonly availableLanguages = computed(() => {
     this.allowedLanguagesVersion();
-    const selected = new Set(this.allowedLanguages.controls.map((control) => control.controls.language.value));
+    const selected = new Set(
+      this.allowedLanguages.controls.map((control) => control.controls.language.value),
+    );
     return this.languageOptions.filter((option) => !selected.has(option.code));
   });
 
@@ -105,7 +116,7 @@ export class Home {
     location: [''],
     remote: [false],
     limit: [30],
-    allowedLanguages: this.fb.array<FormGroup<AllowedLanguageForm>>([])
+    allowedLanguages: this.fb.array<FormGroup<AllowedLanguageForm>>([]),
   });
 
   public get experience(): FormArray {
@@ -145,7 +156,11 @@ export class Home {
   }
 
   public priorityClass(p: string): string {
-    return p === 'alta' ? 'hf-priority--high' : p === 'media' ? 'hf-priority--mid' : 'hf-priority--low';
+    return p === 'alta'
+      ? 'hf-priority--high'
+      : p === 'media'
+        ? 'hf-priority--mid'
+        : 'hf-priority--low';
   }
 
   public sectionLabel(s: string): string {
@@ -154,7 +169,7 @@ export class Home {
       summary: 'Resumen',
       skills: 'Skills',
       experience: 'Experiencia',
-      general: 'General'
+      general: 'General',
     };
     return map[s] ?? s;
   }
@@ -230,12 +245,12 @@ export class Home {
         keywords: value.keywords ?? '',
         location: value.location || undefined,
         remote: !!value.remote,
-        limit: value.limit ?? 30
+        limit: value.limit ?? 30,
       },
       () => {
         this.showSaveDialog.set(false);
         this.saveNameValue.set('');
-      }
+      },
     );
   }
 
@@ -244,9 +259,14 @@ export class Home {
       keywords: savedSearch.keywords,
       location: savedSearch.location ?? '',
       remote: savedSearch.remote,
-      limit: savedSearch.limit
+      limit: savedSearch.limit,
     });
-    this.runSearch({ keywords: savedSearch.keywords, location: savedSearch.location, remote: savedSearch.remote, limit: savedSearch.limit });
+    this.runSearch({
+      keywords: savedSearch.keywords,
+      location: savedSearch.location,
+      remote: savedSearch.remote,
+      limit: savedSearch.limit,
+    });
   }
 
   public deleteSaved(id: string): void {
@@ -254,7 +274,9 @@ export class Home {
       data: { title: 'Eliminar búsqueda', message: '¿Eliminás esta búsqueda guardada?' },
       width: '360px',
     });
-    ref.afterClosed().subscribe((confirmed) => { if (confirmed) this.facade.deleteSaved(id); });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) this.facade.deleteSaved(id);
+    });
   }
 
   public loadHistory(): void {
@@ -262,8 +284,18 @@ export class Home {
   }
 
   public rerunHistory(history: SearchRecord): void {
-    this.searchForm.patchValue({ keywords: history.keywords, location: history.location ?? '', remote: history.remote, limit: history.limit });
-    this.runSearch({ keywords: history.keywords, location: history.location, remote: history.remote, limit: history.limit });
+    this.searchForm.patchValue({
+      keywords: history.keywords,
+      location: history.location ?? '',
+      remote: history.remote,
+      limit: history.limit,
+    });
+    this.runSearch({
+      keywords: history.keywords,
+      location: history.location,
+      remote: history.remote,
+      limit: history.limit,
+    });
   }
 
   public deleteHistory(id: string): void {
@@ -271,19 +303,21 @@ export class Home {
       data: { title: 'Eliminar historial', message: '¿Eliminás este registro del historial?' },
       width: '360px',
     });
-    ref.afterClosed().subscribe((confirmed) => { if (confirmed) this.facade.deleteHistory(id); });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) this.facade.deleteHistory(id);
+    });
   }
 
   public exportResults(): void {
     const header = ['Título', 'Empresa', 'Ubicación', 'Score', 'URL'];
-    const rows = this.results().map(j => [
+    const rows = this.results().map((j) => [
       `"${(j.title ?? '').replace(/"/g, '""')}"`,
       `"${(j.company ?? '').replace(/"/g, '""')}"`,
       `"${(j.location ?? '').replace(/"/g, '""')}"`,
       j.score,
       `"${j.url ?? ''}"`,
     ]);
-    const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const csv = [header.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -301,7 +335,7 @@ export class Home {
     return this.fb.group({
       title: ['', Validators.required],
       company: ['', Validators.required],
-      description: ['']
+      description: [''],
     });
   }
 
@@ -315,13 +349,13 @@ export class Home {
       experience: (value.experience ?? []).map((experience) => ({
         title: experience['title'] ?? '',
         company: experience['company'] ?? '',
-        description: experience['description'] ?? ''
+        description: experience['description'] ?? '',
       })),
       preferences: {
         locations: csvToArray(value.locations ?? ''),
         remote: !!value.remote,
-        seniority: value.seniority || undefined
-      }
+        seniority: value.seniority || undefined,
+      },
     };
   }
 
@@ -337,7 +371,7 @@ export class Home {
       location: value.location || undefined,
       remote: !!value.remote,
       limit: value.limit ?? 30,
-      allowedLanguages: this.allowedLanguageData()
+      allowedLanguages: this.allowedLanguageData(),
     };
   }
 
@@ -345,7 +379,7 @@ export class Home {
     this.profileForm.patchValue({
       headline: data.headline,
       summary: data.summary,
-      skills: data.skills.join(', ')
+      skills: data.skills.join(', '),
     });
 
     if (data.experience.length === 0) return;
@@ -356,8 +390,8 @@ export class Home {
         this.fb.group({
           title: [exp.title, Validators.required],
           company: [exp.company, Validators.required],
-          description: [exp.description]
-        })
+          description: [exp.description],
+        }),
       );
     }
   }
@@ -365,7 +399,7 @@ export class Home {
   private createAllowedLanguageForm(language: AllowedLanguageCode): FormGroup<AllowedLanguageForm> {
     return this.fb.nonNullable.group({
       language: [language],
-      maxLevel: ['B1' as LanguageLevel]
+      maxLevel: ['B1' as LanguageLevel],
     });
   }
 
