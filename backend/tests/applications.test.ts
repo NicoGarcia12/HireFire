@@ -34,16 +34,19 @@ function baseApplication(overrides: Partial<Application> = {}): Application {
 const mocks = vi.hoisted(() => {
   let findManyResult: Application[] = [];
   return {
-    getFindManyResult: () => findManyResult,
     setFindManyResult: (value: Application[]) => {
       findManyResult = value;
     },
-    create: vi.fn(async (_args: { data: Record<string, unknown> }) => baseApplication({ id: 'app-1' })),
-    findMany: vi.fn(
-      async (_args: { where: Record<string, unknown>; orderBy: Record<string, unknown> }) => findManyResult,
+    create: vi.fn(async (_args: { data: Record<string, unknown> }) =>
+      baseApplication({ id: 'app-1' }),
     ),
-    update: vi.fn(async (_args: { where: Record<string, unknown>; data: Record<string, unknown> }) =>
-      baseApplication(),
+    findMany: vi.fn(
+      async (_args: { where: Record<string, unknown>; orderBy: Record<string, unknown> }) =>
+        findManyResult,
+    ),
+    update: vi.fn(
+      async (_args: { where: Record<string, unknown>; data: Record<string, unknown> }) =>
+        baseApplication(),
     ),
     delete: vi.fn(async (_args: { where: Record<string, unknown> }) => undefined),
   };
@@ -82,7 +85,11 @@ beforeEach(() => {
 
 describe('applications-helper — createApplication', () => {
   it('applies defaults when optional fields are omitted', async () => {
-    await createApplication({ profileId: 'profile-1', title: 'Backend Developer', company: 'Acme' });
+    await createApplication({
+      profileId: 'profile-1',
+      title: 'Backend Developer',
+      company: 'Acme',
+    });
 
     const data = mocks.create.mock.calls[0]?.[0].data ?? {};
     expect(data['remote']).toBe(false);

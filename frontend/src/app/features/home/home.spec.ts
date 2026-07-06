@@ -269,7 +269,12 @@ type FullHomeDataPortMock = Pick<
 function setupHomeWithMock(mock: FullHomeDataPortMock): Home {
   TestBed.configureTestingModule({
     imports: [Home],
-    providers: [provideZonelessChangeDetection(), { provide: HomeDataPort, useValue: mock }],
+    providers: [
+      provideZonelessChangeDetection(),
+      provideRouter([]),
+      { provide: HomeDataPort, useValue: mock },
+      { provide: ApplicationsDataPort, useValue: { list: () => of([]) } as ApplicationsDataPortMock },
+    ],
   });
   const fixture = TestBed.createComponent(Home);
   fixture.detectChanges();

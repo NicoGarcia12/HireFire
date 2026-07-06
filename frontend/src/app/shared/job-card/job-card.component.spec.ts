@@ -1,6 +1,8 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { describe, expect, it } from 'vitest';
+import { ApplicationsDataPort } from '../../application/applications/applications-data.port';
 import { JobCardComponent } from './job-card.component';
 import type { MatchResult } from '../../domain/matching/models/match-result.model';
 
@@ -20,7 +22,10 @@ const job: MatchResult = {
 function createComponent(): JobCardComponent {
   TestBed.configureTestingModule({
     imports: [JobCardComponent],
-    providers: [provideZonelessChangeDetection()],
+    providers: [
+      provideZonelessChangeDetection(),
+      { provide: ApplicationsDataPort, useValue: { list: () => of([]) } },
+    ],
   });
   const fixture = TestBed.createComponent(JobCardComponent);
   fixture.componentRef.setInput('job', job);
