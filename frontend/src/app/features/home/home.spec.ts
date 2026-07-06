@@ -23,7 +23,7 @@ describe('Home search language filters', () => {
         return of({ count: 0, results: [] });
       },
       getHistory: () => of([]),
-      getSavedSearches: () => of([])
+      getSavedSearches: () => of([]),
     };
     const applicationsDataPortMock: ApplicationsDataPortMock = {
       list: () => of([])
@@ -35,8 +35,8 @@ describe('Home search language filters', () => {
         provideZonelessChangeDetection(),
         provideRouter([]),
         { provide: HomeDataPort, useValue: homeDataPortMock },
-        { provide: ApplicationsDataPort, useValue: applicationsDataPortMock }
-      ]
+        { provide: ApplicationsDataPort, useValue: applicationsDataPortMock },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Home);
@@ -52,19 +52,29 @@ describe('Home search language filters', () => {
     return fixture.nativeElement.querySelector('[data-testid="add-language-button"]');
   }
 
-  function selectedLanguageItem(language: 'english' | 'portuguese'): HTMLElement | null {
+  function selectedLanguageItem(
+    language: 'english' | 'portuguese' | 'spanish' | 'french' | 'german',
+  ): HTMLElement | null {
     return fixture.nativeElement.querySelector(`[data-testid="allowed-language-${language}"]`);
   }
 
-  function selectedLanguageLevel(language: 'english' | 'portuguese'): HTMLSelectElement | null {
-    return fixture.nativeElement.querySelector(`[data-testid="allowed-language-${language}-level"]`);
+  function selectedLanguageLevel(
+    language: 'english' | 'portuguese' | 'spanish' | 'french' | 'german',
+  ): HTMLSelectElement | null {
+    return fixture.nativeElement.querySelector(
+      `[data-testid="allowed-language-${language}-level"]`,
+    );
   }
 
-  function removeLanguageButton(language: 'english' | 'portuguese'): HTMLButtonElement | null {
+  function removeLanguageButton(
+    language: 'english' | 'portuguese' | 'spanish' | 'french' | 'german',
+  ): HTMLButtonElement | null {
     return fixture.nativeElement.querySelector(`[data-testid="remove-language-${language}"]`);
   }
 
-  function selectLanguage(language: 'english' | 'portuguese'): void {
+  function selectLanguage(
+    language: 'english' | 'portuguese' | 'spanish' | 'french' | 'german',
+  ): void {
     const select = languageSelect();
     if (!select) throw new Error('language select not found');
     select.value = language;
@@ -80,16 +90,16 @@ describe('Home search language filters', () => {
   }
 
   /** Simula el flujo usuario: elegir idioma y presionar Agregar, no manipular el FormArray directo. */
-  function addLanguage(language: 'english' | 'portuguese'): void {
+  function addLanguage(language: 'english' | 'portuguese' | 'spanish' | 'french' | 'german'): void {
     selectLanguage(language);
     clickAddLanguage();
   }
 
-  it('renders a language selector with English and Portuguese available initially', () => {
+  it('renders a language selector with all supported languages available initially', () => {
     fixture.detectChanges();
 
     const available = component.availableLanguages().map((o) => o.code);
-    expect(available).toEqual(['english', 'portuguese']);
+    expect(available).toEqual(['english', 'portuguese', 'spanish', 'french', 'german']);
   });
 
   it('removes English from available options and shows it in the allowed-languages list', () => {
@@ -100,7 +110,7 @@ describe('Home search language filters', () => {
     fixture.detectChanges();
 
     const available = component.availableLanguages().map((o) => o.code);
-    expect(available).toEqual(['portuguese']);
+    expect(available).toEqual(['portuguese', 'spanish', 'french', 'german']);
     expect(selectedLanguageItem('english')).toBeTruthy();
     expect(removeLanguageButton('english')).toBeTruthy();
   });
@@ -114,14 +124,17 @@ describe('Home search language filters', () => {
     fixture.detectChanges();
 
     const available = component.availableLanguages().map((o) => o.code);
-    expect(available).toEqual(['english', 'portuguese']);
+    expect(available).toEqual(['english', 'portuguese', 'spanish', 'french', 'german']);
   });
 
-  it('hides the language selector when English and Portuguese are already allowed', () => {
+  it('hides the language selector when every supported language is already allowed', () => {
     fixture.detectChanges();
 
     addLanguage('english');
     addLanguage('portuguese');
+    addLanguage('spanish');
+    addLanguage('french');
+    addLanguage('german');
 
     expect(languageSelect()).toBeNull();
   });
@@ -140,7 +153,7 @@ describe('Home search language filters', () => {
       keywords: 'backend',
       location: 'Argentina',
       remote: true,
-      limit: 10
+      limit: 10,
     });
 
     component.runSearch();
@@ -151,8 +164,7 @@ describe('Home search language filters', () => {
       location: 'Argentina',
       remote: true,
       limit: 10,
-      allowedLanguages: [{ language: 'english', maxLevel: 'B1' }]
+      allowedLanguages: [{ language: 'english', maxLevel: 'B1' }],
     });
   });
-
 });

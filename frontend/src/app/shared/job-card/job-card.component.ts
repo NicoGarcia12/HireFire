@@ -19,8 +19,12 @@ import { ScoreRingComponent } from '../score-ring/score-ring.component';
           <h3>{{ job().title }}</h3>
           <p class="hf-job__meta">
             {{ job().company }}
-            @if (job().location) { · {{ job().location }} }
-            @if (job().remote) { <span class="hf-tag">Remoto</span> }
+            @if (job().location) {
+              · {{ job().location }}
+            }
+            @if (job().remote) {
+              <span class="hf-tag">Remoto</span>
+            }
           </p>
         </div>
         <hf-score-ring [score]="job().score" />
@@ -30,21 +34,31 @@ import { ScoreRingComponent } from '../score-ring/score-ring.component';
         @if (job().reasons.length) {
           <div class="hf-block">
             <strong>Por qué encajás</strong>
-            <ul>@for (r of job().reasons; track r) { <li>{{ r }}</li> }</ul>
+            <ul>
+              @for (r of job().reasons; track r) {
+                <li>{{ r }}</li>
+              }
+            </ul>
           </div>
         }
         @if (job().gaps.length) {
           <div class="hf-block hf-block--gaps">
             <strong>Qué te falta</strong>
-            <ul>@for (g of job().gaps; track g) { <li>{{ g }}</li> }</ul>
+            <ul>
+              @for (g of job().gaps; track g) {
+                <li>{{ g }}</li>
+              }
+            </ul>
           </div>
         }
         @if (job().languageWarnings?.length) {
           <div class="hf-block hf-block--warnings">
             <strong>Advertencias de idioma</strong>
-            <ul>@for (w of job().languageWarnings!; track $index) {
-              <li>{{ warningText(w) }}</li>
-            }</ul>
+            <ul>
+              @for (w of job().languageWarnings!; track $index) {
+                <li>{{ warningText(w) }}</li>
+              }
+            </ul>
           </div>
         }
         <div class="hf-job__actions">
@@ -64,66 +78,91 @@ import { ScoreRingComponent } from '../score-ring/score-ring.component';
       </mat-card-content>
     </mat-card>
   `,
-  styles: [`
-    mat-card.hf-job-card {
-      border: 1px solid #2a2e3a;
-      border-radius: 12px;
-      margin-bottom: 1rem;
-      padding: 0;
+  styles: [
+    `
+      mat-card.hf-job-card {
+        border: 1px solid #2a2e3a;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        padding: 0;
 
-      mat-card-content {
-        padding: .25rem 1.25rem 1.25rem;
-        margin: 0;
+        mat-card-content {
+          padding: 0.25rem 1.25rem 1.25rem;
+          margin: 0;
+        }
       }
-    }
 
-    .hf-job__head {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: flex-start;
-      padding: 1.25rem 1.25rem .5rem;
-    }
+      .hf-job__head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        padding: 1.25rem 1.25rem 0.5rem;
+      }
 
-    .hf-job__info { flex: 1; min-width: 0; }
-    h3 { margin: 0; font-size: 1.05rem; line-height: 1.3; }
-    .hf-job__meta { color: #9aa0ad; margin: .25rem 0 0; font-size: .88rem; }
+      .hf-job__info {
+        flex: 1;
+        min-width: 0;
+      }
+      h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        line-height: 1.3;
+      }
+      .hf-job__meta {
+        color: #9aa0ad;
+        margin: 0.25rem 0 0;
+        font-size: 0.88rem;
+      }
 
-    .hf-tag {
-      font-size: .7rem;
-      background: #1c2a3a;
-      color: #7ec8e0;
-      padding: .15rem .5rem;
-      border-radius: 6px;
-      margin-left: .4rem;
-    }
+      .hf-tag {
+        font-size: 0.7rem;
+        background: #1c2a3a;
+        color: #7ec8e0;
+        padding: 0.15rem 0.5rem;
+        border-radius: 6px;
+        margin-left: 0.4rem;
+      }
 
-    .hf-block {
-      margin-top: .8rem;
-      font-size: .9rem;
+      .hf-block {
+        margin-top: 0.8rem;
+        font-size: 0.9rem;
 
-      strong { display: block; margin-bottom: .3rem; color: #e6e8ee; }
-      ul { margin: 0; padding-left: 1.1rem; color: #9aa0ad; }
-      &--gaps strong { color: #ffa53d; }
-      &--warnings strong { color: #ff9a9a; }
-    }
+        strong {
+          display: block;
+          margin-bottom: 0.3rem;
+          color: #e6e8ee;
+        }
+        ul {
+          margin: 0;
+          padding-left: 1.1rem;
+          color: #9aa0ad;
+        }
+        &--gaps strong {
+          color: #ffa53d;
+        }
+        &--warnings strong {
+          color: #ff9a9a;
+        }
+      }
 
-    .hf-job__actions {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      margin-top: .9rem;
-    }
+      .hf-job__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.9rem;
+      }
 
-    .hf-pill--applied {
-      font-size: .8rem;
-      background: #1c3a24;
-      color: #7ee0a0;
-      padding: .4rem .8rem;
-      border-radius: 8px;
-      border: 1px solid #2b6b3b;
-    }
-  `]
+      .hf-pill--applied {
+        font-size: 0.8rem;
+        background: #1c3a24;
+        color: #7ee0a0;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        border: 1px solid #2b6b3b;
+      }
+    `,
+  ],
 })
 export class JobCardComponent {
   private readonly applicationsFacade = inject(ApplicationsFacade);
@@ -168,6 +207,9 @@ export class JobCardComponent {
   readonly languageLabels: Record<AllowedLanguageCode, string> = {
     english: 'Inglés',
     portuguese: 'Portugués',
+    spanish: 'Español',
+    french: 'Francés',
+    german: 'Alemán',
   };
 
   warningText(warning: LanguageWarning): string {
