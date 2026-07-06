@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { ApplicationsFacade } from '../../application/applications/applications.facade';
 import type { MatchResult } from '../../domain/matching/models/match-result.model';
 import type { LanguageWarning } from '../../domain/matching/models/language-warning.model';
 import type { AllowedLanguageCode } from '../../domain/matching/types/allowed-language-code.type';
@@ -60,11 +61,20 @@ import { ScoreRingComponent } from '../score-ring/score-ring.component';
             </ul>
           </div>
         }
-        @if (job().url) {
-          <a mat-button color="primary" [href]="job().url" target="_blank" rel="noopener">
-            Ver oferta ↗
-          </a>
-        }
+        <div class="hf-job__actions">
+          @if (alreadyApplied()) {
+            <span class="hf-pill hf-pill--applied">Ya postulado ✓</span>
+          } @else {
+            <button mat-stroked-button [disabled]="!profileId() || submitting()" (click)="apply()">
+              {{ submitting() ? 'Postulando…' : 'Me postulé' }}
+            </button>
+          }
+          @if (job().url) {
+            <a mat-button color="primary" [href]="job().url" target="_blank" rel="noopener">
+              Ver oferta ↗
+            </a>
+          }
+        </div>
       </mat-card-content>
     </mat-card>
   `,
@@ -135,11 +145,64 @@ import { ScoreRingComponent } from '../score-ring/score-ring.component';
           color: #ff9a9a;
         }
       }
+
+      .hf-job__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.9rem;
+      }
+
+      .hf-pill--applied {
+        font-size: 0.8rem;
+        background: #1c3a24;
+        color: #7ee0a0;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        border: 1px solid #2b6b3b;
+      }
     `,
   ],
 })
 export class JobCardComponent {
+  private readonly applicationsFacade = inject(ApplicationsFacade);
+
   readonly job = input.required<MatchResult>();
+  readonly profileId = input<string | null>(null);
+
+  readonly submitting = signal(false);
+
+  readonly alreadyApplied = computed(() =>
+    this.applicationsFacade.applications().some((application) => application.externalJobId === this.job().id)
+  );
+
+  constructor() {
+    effect(() => {
+      if (this.applicationsFacade.error()) this.submitting.set(false);
+    });
+  }
+
+  apply(): void {
+    const profileId = this.profileId();
+    if (!profileId || this.alreadyApplied() || this.submitting()) return;
+
+    this.submitting.set(true);
+    const job = this.job();
+    this.applicationsFacade.create(
+      {
+        profileId,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        remote: job.remote,
+        url: job.url,
+        description: job.description,
+        source: 'hirefire',
+        externalJobId: job.id
+      },
+      () => this.submitting.set(false)
+    );
+  }
 
   readonly languageLabels: Record<AllowedLanguageCode, string> = {
     english: 'Inglés',
