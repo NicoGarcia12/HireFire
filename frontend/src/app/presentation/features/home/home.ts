@@ -132,6 +132,7 @@ export class Home {
   constructor() {
     const profileId = this.profileId();
     if (profileId) this.applicationsFacade.load(profileId);
+    document.documentElement.classList.toggle('light-mode', !this.isDarkMode());
   }
 
   public get experience(): FormArray {
@@ -140,10 +141,6 @@ export class Home {
 
   public get allowedLanguages(): FormArray<FormGroup<AllowedLanguageForm>> {
     return this.searchForm.controls.allowedLanguages;
-  }
-
-  constructor() {
-    document.documentElement.classList.toggle('light-mode', !this.isDarkMode());
   }
 
   public toggleTheme(): void {

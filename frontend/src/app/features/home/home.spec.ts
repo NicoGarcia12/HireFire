@@ -26,7 +26,7 @@ describe('Home search language filters', () => {
       getSavedSearches: () => of([]),
     };
     const applicationsDataPortMock: ApplicationsDataPortMock = {
-      list: () => of([])
+      list: () => of([]),
     };
 
     await TestBed.configureTestingModule({
@@ -183,12 +183,17 @@ describe('Home dark/light theme toggle', () => {
       getHistory: () => of([]),
       getSavedSearches: () => of([]),
     };
+    const applicationsDataPortMock: ApplicationsDataPortMock = {
+      list: () => of([]),
+    };
 
     await TestBed.configureTestingModule({
       imports: [Home],
       providers: [
         provideZonelessChangeDetection(),
+        provideRouter([]),
         { provide: HomeDataPort, useValue: homeDataPortMock },
+        { provide: ApplicationsDataPort, useValue: applicationsDataPortMock },
       ],
     }).compileComponents();
 
@@ -237,7 +242,12 @@ describe('Home dark/light theme toggle', () => {
         imports: [Home],
         providers: [
           provideZonelessChangeDetection(),
+          provideRouter([]),
           { provide: HomeDataPort, useValue: homeDataPortMock },
+          {
+            provide: ApplicationsDataPort,
+            useValue: { list: () => of([]) } as ApplicationsDataPortMock,
+          },
         ],
       })
       .compileComponents();
