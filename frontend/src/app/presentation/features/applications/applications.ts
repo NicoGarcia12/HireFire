@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatOptionModule } from '@angular/material/core';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select';
@@ -10,6 +11,8 @@ import { ApplicationsFacade } from '../../../application/applications/applicatio
 import { HomeFacade } from '../../../application/home/home.facade';
 import { APPLICATION_STATUSES, type ApplicationStatus } from '../../../domain/applications/enums/application-status.enum';
 import type { Application } from '../../../domain/applications/models/application.model';
+import { ApplicationCreateDialogComponent } from './application-create-dialog.component';
+import { ApplicationEditDialogComponent } from './application-edit-dialog.component';
 
 const STATUS_LABELS: Record<ApplicationStatus, string> = {
   postulado: 'Postulado',
@@ -22,7 +25,7 @@ const STATUS_LABELS: Record<ApplicationStatus, string> = {
 
 @Component({
   selector: 'app-applications',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatOptionModule, MatSelectModule],
+  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatOptionModule, MatSelectModule],
   templateUrl: './applications.html',
   styleUrl: './applications.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,6 +33,7 @@ const STATUS_LABELS: Record<ApplicationStatus, string> = {
 export class Applications {
   private readonly facade = inject(ApplicationsFacade);
   private readonly homeFacade = inject(HomeFacade);
+  private readonly dialog = inject(MatDialog);
 
   public readonly profileId = this.homeFacade.profileId;
   public readonly loading = this.facade.loading;
@@ -49,5 +53,22 @@ export class Applications {
     if (status === application.status) return;
 
     this.facade.updateStatus(application.id, status);
+  }
+
+  public openCreateDialog(): void {
+    const profileId = this.profileId();
+    if (!profileId) return;
+
+    this.dialog.open(ApplicationCreateDialogComponent, {
+      data: { profileId },
+      width: '480px'
+    });
+  }
+
+  public openEditDialog(application: Application): void {
+    this.dialog.open(ApplicationEditDialogComponent, {
+      data: { application },
+      width: '520px'
+    });
   }
 }
