@@ -29,9 +29,11 @@ yarn-error.log
 !.vscode/mcp.json
 .history/*
 
-# Cypress
-/cypress/screenshots
-/cypress/videos
+# Playwright
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
 
 # Miscellaneous
 /.angular/cache
