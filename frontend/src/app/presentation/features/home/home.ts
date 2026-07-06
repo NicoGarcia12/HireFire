@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSliderModule } from '@angular/material/slider';
@@ -12,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { JobCardComponent } from '../../../shared/job-card/job-card.component';
+import { ApplicationsFacade } from '../../../application/applications/applications.facade';
 import { HomeFacade } from '../../../application/home/home.facade';
 import { StorageService } from '../../../core/storage.service';
 import type {
@@ -43,6 +45,7 @@ function csvToArray(value: string): string[] {
   imports: [
     ReactiveFormsModule,
     DatePipe,
+    RouterLink,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -61,6 +64,7 @@ function csvToArray(value: string): string[] {
 export class Home {
   private readonly fb = inject(FormBuilder);
   private readonly facade = inject(HomeFacade);
+  private readonly applicationsFacade = inject(ApplicationsFacade);
   private readonly dialog = inject(MatDialog);
   private readonly storage = inject(StorageService);
 
@@ -125,16 +129,18 @@ export class Home {
     allowedLanguages: this.fb.array<FormGroup<AllowedLanguageForm>>([]),
   });
 
+  constructor() {
+    const profileId = this.profileId();
+    if (profileId) this.applicationsFacade.load(profileId);
+    document.documentElement.classList.toggle('light-mode', !this.isDarkMode());
+  }
+
   public get experience(): FormArray {
     return this.profileForm.get('experience') as FormArray;
   }
 
   public get allowedLanguages(): FormArray<FormGroup<AllowedLanguageForm>> {
     return this.searchForm.controls.allowedLanguages;
-  }
-
-  constructor() {
-    document.documentElement.classList.toggle('light-mode', !this.isDarkMode());
   }
 
   public toggleTheme(): void {

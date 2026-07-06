@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { HomeDataPort } from './application/home/home-data.port';
+import { ApplicationsDataPort } from './application/applications/applications-data.port';
 import { App } from './app';
 import { routes } from './app.routes';
 import { ApiService } from './infrastructure/api/hirefire-api.service';
@@ -12,7 +13,13 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideZonelessChangeDetection(), provideRouter(routes), provideHttpClient(), { provide: HomeDataPort, useExisting: ApiService }]
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter(routes),
+        provideHttpClient(),
+        { provide: HomeDataPort, useExisting: ApiService },
+        { provide: ApplicationsDataPort, useExisting: ApiService }
+      ]
     }).compileComponents();
   });
 
