@@ -11,6 +11,7 @@
     </button>
     <h1>HireFire 🔥</h1>
     <p>Cargá tu perfil, buscá por palabras clave y dejá que Groq/Llama rankee las ofertas.</p>
+    <a routerLink="/postulaciones" class="hf-nav-link">📋 Ver mis postulaciones</a>
   </header>
 
   <!-- ══════════════════ STEPPER ══════════════════ -->
@@ -502,7 +503,7 @@
             </div>
 
             @for (job of filteredResults(); track job.id) {
-              <hf-job-card [job]="job" />
+              <hf-job-card [job]="job" [profileId]="profileId()" />
             }
 
             @if (filteredResults().length === 0 && minScore() > 0) {
