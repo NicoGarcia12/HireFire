@@ -15,6 +15,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 import { JobCardComponent } from '../../../shared/job-card/job-card.component';
 import { ApplicationsFacade } from '../../../application/applications/applications.facade';
 import { HomeFacade } from '../../../application/home/home.facade';
+import { StorageService } from '../../../core/storage.service';
 import type {
   HomeProfilePayload,
   HomeSearchPayload,
@@ -29,6 +30,8 @@ import type { LinkedInImport } from '../../../domain/profile/models/linkedin-imp
 import type { SavedSearch } from '../../../domain/search/models/saved-search.model';
 import type { SearchRecord } from '../../../domain/search/models/search-record.model';
 import type { AllowedLanguageForm, AvailableLanguageOption, SearchRunParams } from './home.types';
+
+const THEME_STORAGE_KEY = 'hirefire_theme';
 
 function csvToArray(value: string): string[] {
   return value
@@ -63,6 +66,9 @@ export class Home {
   private readonly facade = inject(HomeFacade);
   private readonly applicationsFacade = inject(ApplicationsFacade);
   private readonly dialog = inject(MatDialog);
+  private readonly storage = inject(StorageService);
+
+  public readonly isDarkMode = signal(this.storage.get(THEME_STORAGE_KEY) !== 'light');
 
   public readonly profileId = this.facade.profileId;
   public readonly error = this.facade.error;
@@ -126,6 +132,7 @@ export class Home {
   constructor() {
     const profileId = this.profileId();
     if (profileId) this.applicationsFacade.load(profileId);
+    document.documentElement.classList.toggle('light-mode', !this.isDarkMode());
   }
 
   public get experience(): FormArray {
@@ -134,6 +141,13 @@ export class Home {
 
   public get allowedLanguages(): FormArray<FormGroup<AllowedLanguageForm>> {
     return this.searchForm.controls.allowedLanguages;
+  }
+
+  public toggleTheme(): void {
+    const next = !this.isDarkMode();
+    this.isDarkMode.set(next);
+    document.documentElement.classList.toggle('light-mode', !next);
+    this.storage.set(THEME_STORAGE_KEY, next ? 'dark' : 'light');
   }
 
   public addExp(): void {

@@ -1,6 +1,14 @@
 <div class="hf-page">
-
   <header class="hf-hero">
+    <button
+      type="button"
+      mat-icon-button
+      class="hf-theme-toggle"
+      [attr.aria-label]="isDarkMode() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+      (click)="toggleTheme()"
+    >
+      {{ isDarkMode() ? '☀️' : '🌙' }}
+    </button>
     <h1>HireFire 🔥</h1>
     <p>Cargá tu perfil, buscá por palabras clave y dejá que Groq/Llama rankee las ofertas.</p>
     <a routerLink="/postulaciones" class="hf-nav-link">📋 Ver mis postulaciones</a>
@@ -8,22 +16,25 @@
 
   <!-- ══════════════════ STEPPER ══════════════════ -->
   <nav class="hf-stepper" aria-label="Progreso del flujo">
-    <div class="hf-stepper__step"
-         [class.hf-stepper__step--done]="!!profileId()"
-         [class.hf-stepper__step--active]="!profileId()">
+    <div
+      class="hf-stepper__step"
+      [class.hf-stepper__step--done]="!!profileId()"
+      [class.hf-stepper__step--active]="!profileId()"
+    >
       <div class="hf-stepper__bubble">{{ profileId() ? '✓' : '1' }}</div>
       <span class="hf-stepper__label">Perfil</span>
     </div>
     <div class="hf-stepper__line" [class.hf-stepper__line--done]="!!profileId()"></div>
-    <div class="hf-stepper__step"
-         [class.hf-stepper__step--done]="results().length > 0"
-         [class.hf-stepper__step--active]="!!profileId() && !results().length">
+    <div
+      class="hf-stepper__step"
+      [class.hf-stepper__step--done]="results().length > 0"
+      [class.hf-stepper__step--active]="!!profileId() && !results().length"
+    >
       <div class="hf-stepper__bubble">{{ results().length > 0 ? '✓' : '2' }}</div>
       <span class="hf-stepper__label">Buscar</span>
     </div>
     <div class="hf-stepper__line" [class.hf-stepper__line--done]="results().length > 0"></div>
-    <div class="hf-stepper__step"
-         [class.hf-stepper__step--done]="results().length > 0">
+    <div class="hf-stepper__step" [class.hf-stepper__step--done]="results().length > 0">
       <div class="hf-stepper__bubble">{{ results().length > 0 ? '✓' : '3' }}</div>
       <span class="hf-stepper__label">Resultados</span>
     </div>
@@ -35,7 +46,6 @@
 
   <div class="hf-layout">
     <div class="hf-layout__left">
-
       <!-- ══════════════════ PERFIL ══════════════════ -->
       <mat-card class="hf-card">
         <div class="hf-card__head">
@@ -53,23 +63,35 @@
 
         <mat-card-content>
           <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-
             <mat-form-field appearance="outline" class="hf-field-full">
               <mat-label>Headline *</mat-label>
-              <input matInput formControlName="headline" placeholder="Backend Developer · Node.js & TypeScript" data-testid="profile-headline" />
+              <input
+                matInput
+                formControlName="headline"
+                placeholder="Backend Developer · Node.js & TypeScript"
+                data-testid="profile-headline"
+              />
               <mat-error>Este campo es requerido</mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="hf-field-full">
               <mat-label>Resumen</mat-label>
-              <textarea matInput formControlName="summary" rows="2"
-                placeholder="Breve descripción de tu experiencia"></textarea>
+              <textarea
+                matInput
+                formControlName="summary"
+                rows="2"
+                placeholder="Breve descripción de tu experiencia"
+              ></textarea>
             </mat-form-field>
 
             <div class="hf-grid-2">
               <mat-form-field appearance="outline">
                 <mat-label>Skills (separadas por coma)</mat-label>
-                <input matInput formControlName="skills" placeholder="Node.js, TypeScript, Express" />
+                <input
+                  matInput
+                  formControlName="skills"
+                  placeholder="Node.js, TypeScript, Express"
+                />
               </mat-form-field>
               <mat-form-field appearance="outline">
                 <mat-label>Ubicaciones preferidas (coma)</mat-label>
@@ -95,39 +117,68 @@
                   <div class="hf-exp__row" [formGroupName]="$index">
                     <mat-form-field appearance="outline">
                       <mat-label>Puesto</mat-label>
-                      <input matInput formControlName="title" [attr.data-testid]="'exp-title-' + $index" />
+                      <input
+                        matInput
+                        formControlName="title"
+                        [attr.data-testid]="'exp-title-' + $index"
+                      />
                       <mat-error>Requerido</mat-error>
                     </mat-form-field>
                     <mat-form-field appearance="outline">
                       <mat-label>Empresa</mat-label>
-                      <input matInput formControlName="company" [attr.data-testid]="'exp-company-' + $index" />
+                      <input
+                        matInput
+                        formControlName="company"
+                        [attr.data-testid]="'exp-company-' + $index"
+                      />
                       <mat-error>Requerido</mat-error>
                     </mat-form-field>
                     <mat-form-field appearance="outline">
                       <mat-label>Qué hacías</mat-label>
                       <input matInput formControlName="description" />
                     </mat-form-field>
-                    <button type="button" mat-icon-button
+                    <button
+                      type="button"
+                      mat-icon-button
                       [disabled]="experience.length === 1"
                       [attr.aria-label]="'Quitar experiencia ' + ($index + 1)"
-                      (click)="removeExp($index)">✕</button>
+                      (click)="removeExp($index)"
+                    >
+                      ✕
+                    </button>
                   </div>
                 }
               </div>
             </div>
 
             <div class="hf-profile-actions">
-              <button type="submit" mat-flat-button color="primary" [disabled]="savingProfile()" data-testid="save-profile-btn">
-                {{ savingProfile() ? 'Guardando…' : (profileId() ? 'Actualizar perfil' : 'Guardar perfil') }}
+              <button
+                type="submit"
+                mat-flat-button
+                color="primary"
+                [disabled]="savingProfile()"
+                data-testid="save-profile-btn"
+              >
+                {{
+                  savingProfile()
+                    ? 'Guardando…'
+                    : profileId()
+                      ? 'Actualizar perfil'
+                      : 'Guardar perfil'
+                }}
               </button>
               @if (profileId()) {
-                <button type="button" mat-flat-button class="hf-btn-accent"
-                  [disabled]="analyzing()" (click)="analyzeProfile()">
+                <button
+                  type="button"
+                  mat-flat-button
+                  class="hf-btn-accent"
+                  [disabled]="analyzing()"
+                  (click)="analyzeProfile()"
+                >
                   {{ analyzing() ? 'Analizando…' : '🔍 Analizar perfil' }}
                 </button>
               }
             </div>
-
           </form>
         </mat-card-content>
       </mat-card>
@@ -151,13 +202,21 @@
         <mat-card class="hf-card">
           <div class="hf-card__head">
             <h2 class="hf-card__title">Análisis de tu perfil LinkedIn</h2>
-            <div class="hf-score-badge" [class]="scoreClass(a.score)">{{ a.score }}<span>/100</span></div>
+            <div class="hf-score-badge" [class]="scoreClass(a.score)">
+              {{ a.score }}<span>/100</span>
+            </div>
           </div>
           <mat-card-content>
             @if (a.strengths.length) {
               <div class="hf-analysis-block">
-                <h3 class="hf-analysis-block__title hf-analysis-block__title--ok">✓ Puntos fuertes</h3>
-                <ul>@for (s of a.strengths; track s) { <li>{{ s }}</li> }</ul>
+                <h3 class="hf-analysis-block__title hf-analysis-block__title--ok">
+                  ✓ Puntos fuertes
+                </h3>
+                <ul>
+                  @for (s of a.strengths; track s) {
+                    <li>{{ s }}</li>
+                  }
+                </ul>
               </div>
             }
             @if (a.suggestions.length) {
@@ -168,7 +227,9 @@
                     <div class="hf-suggestion">
                       <div class="hf-suggestion__head">
                         <span class="hf-tag hf-tag--section">{{ sectionLabel(sug.section) }}</span>
-                        <span class="hf-priority" [class]="priorityClass(sug.priority)">{{ sug.priority }}</span>
+                        <span class="hf-priority" [class]="priorityClass(sug.priority)">{{
+                          sug.priority
+                        }}</span>
                       </div>
                       <p class="hf-suggestion__issue">{{ sug.issue }}</p>
                       <p class="hf-suggestion__fix">{{ sug.suggestion }}</p>
@@ -180,10 +241,9 @@
           </mat-card-content>
         </mat-card>
       }
-
-    </div><!-- /hf-layout__left -->
+    </div>
+    <!-- /hf-layout__left -->
     <div class="hf-layout__right">
-
       <!-- ══════════════════ BÚSQUEDAS GUARDADAS ══════════════════ -->
       @if (saved().length > 0) {
         <mat-card class="hf-card hf-card--compact">
@@ -196,12 +256,19 @@
                 <div class="hf-item">
                   <div class="hf-item__info">
                     <strong>{{ s.name }}</strong>
-                    <span class="hf-muted">{{ s.keywords }}{{ s.location ? ' · ' + s.location : '' }}</span>
+                    <span class="hf-muted"
+                      >{{ s.keywords }}{{ s.location ? ' · ' + s.location : '' }}</span
+                    >
                   </div>
                   <div class="hf-item__actions">
                     <button mat-stroked-button (click)="runSaved(s)">▶ Ejecutar</button>
-                    <button mat-icon-button aria-label="Eliminar búsqueda guardada"
-                      (click)="deleteSaved(s.id)">✕</button>
+                    <button
+                      mat-icon-button
+                      aria-label="Eliminar búsqueda guardada"
+                      (click)="deleteSaved(s.id)"
+                    >
+                      ✕
+                    </button>
                   </div>
                 </div>
               }
@@ -221,10 +288,14 @@
 
         <mat-card-content>
           <form [formGroup]="searchForm" (ngSubmit)="runSearch()">
-
             <mat-form-field appearance="outline" class="hf-field-full">
               <mat-label>Palabras clave *</mat-label>
-              <input matInput formControlName="keywords" placeholder="backend node typescript" data-testid="search-keywords" />
+              <input
+                matInput
+                formControlName="keywords"
+                placeholder="backend node typescript"
+                data-testid="search-keywords"
+              />
               <mat-error>Este campo es requerido</mat-error>
             </mat-form-field>
 
@@ -237,60 +308,97 @@
                 <mat-label>Cantidad</mat-label>
                 <input matInput type="number" formControlName="limit" min="1" max="200" />
               </mat-form-field>
-              <mat-checkbox formControlName="remote" class="hf-checkbox-cell">Solo remoto</mat-checkbox>
+              <mat-checkbox formControlName="remote" class="hf-checkbox-cell"
+                >Solo remoto</mat-checkbox
+              >
             </div>
 
             <div class="hf-language-filters" aria-labelledby="language-filters-title">
               <h3 id="language-filters-title">Idiomas permitidos</h3>
               <p class="hf-help-text">
-                Las publicaciones escritas en idiomas no permitidos se excluyen. Si un idioma aparece sólo como
-                requisito deseable, la oferta puede mostrarse con una advertencia cuando el backend la marque.
+                Las publicaciones escritas en idiomas no permitidos se excluyen. Si un idioma
+                aparece sólo como requisito deseable, la oferta puede mostrarse con una advertencia
+                cuando el backend la marque.
               </p>
 
               @if (availableLanguages().length > 0) {
                 <div class="hf-language-picker">
                   <mat-form-field appearance="outline">
                     <mat-label>Agregar idioma</mat-label>
-                    <mat-select [value]="selectedLanguage()"
+                    <mat-select
+                      [value]="selectedLanguage()"
                       (selectionChange)="onLanguageSelectionChange($event.value)"
-                      id="allowed-language-select" data-testid="language-select">
+                      id="allowed-language-select"
+                      data-testid="language-select"
+                    >
                       @for (language of availableLanguages(); track language.code) {
                         <mat-option [value]="language.code">{{ language.label }}</mat-option>
                       }
                     </mat-select>
                   </mat-form-field>
-                  <button type="button" mat-stroked-button data-testid="add-language-button"
-                    (click)="addSelectedLanguage()">
+                  <button
+                    type="button"
+                    mat-stroked-button
+                    data-testid="add-language-button"
+                    (click)="addSelectedLanguage()"
+                  >
                     Agregar
                   </button>
                 </div>
               }
 
               @if (allowedLanguages.length > 0) {
-                <div class="hf-allowed-language-list" formArrayName="allowedLanguages"
-                  aria-label="Lista de idiomas permitidos">
-                  @for (languageControl of allowedLanguages.controls; track languageControl.controls.language.value) {
-                    <div class="hf-allowed-language-item" [formGroupName]="$index"
-                      [attr.data-testid]="'allowed-language-' + languageControl.controls.language.value">
+                <div
+                  class="hf-allowed-language-list"
+                  formArrayName="allowedLanguages"
+                  aria-label="Lista de idiomas permitidos"
+                >
+                  @for (
+                    languageControl of allowedLanguages.controls;
+                    track languageControl.controls.language.value
+                  ) {
+                    <div
+                      class="hf-allowed-language-item"
+                      [formGroupName]="$index"
+                      [attr.data-testid]="
+                        'allowed-language-' + languageControl.controls.language.value
+                      "
+                    >
                       <div>
-                        <strong>{{ languageLabel(languageControl.controls.language.value) }}</strong>
+                        <strong>{{
+                          languageLabel(languageControl.controls.language.value)
+                        }}</strong>
                         <span class="hf-muted">Permitido hasta nivel</span>
                       </div>
                       <mat-form-field appearance="outline" class="hf-language-level-field">
                         <mat-label>Nivel</mat-label>
                         <mat-select
-                          [id]="'allowed-language-' + languageControl.controls.language.value + '-level'"
+                          [id]="
+                            'allowed-language-' + languageControl.controls.language.value + '-level'
+                          "
                           formControlName="maxLevel"
-                          [attr.data-testid]="'allowed-language-' + languageControl.controls.language.value + '-level'">
+                          [attr.data-testid]="
+                            'allowed-language-' + languageControl.controls.language.value + '-level'
+                          "
+                        >
                           @for (level of languageLevels; track level) {
                             <mat-option [value]="level">{{ level }}</mat-option>
                           }
                         </mat-select>
                       </mat-form-field>
-                      <button type="button" mat-icon-button
-                        [attr.data-testid]="'remove-language-' + languageControl.controls.language.value"
-                        [attr.aria-label]="'Quitar ' + languageLabel(languageControl.controls.language.value)"
-                        (click)="removeAllowedLanguage($index)">✕</button>
+                      <button
+                        type="button"
+                        mat-icon-button
+                        [attr.data-testid]="
+                          'remove-language-' + languageControl.controls.language.value
+                        "
+                        [attr.aria-label]="
+                          'Quitar ' + languageLabel(languageControl.controls.language.value)
+                        "
+                        (click)="removeAllowedLanguage($index)"
+                      >
+                        ✕
+                      </button>
                     </div>
                   }
                 </div>
@@ -298,8 +406,13 @@
             </div>
 
             <div class="hf-search-actions">
-              <button type="submit" mat-flat-button color="primary"
-                [disabled]="!profileId() || searching()" data-testid="search-submit">
+              <button
+                type="submit"
+                mat-flat-button
+                color="primary"
+                [disabled]="!profileId() || searching()"
+                data-testid="search-submit"
+              >
                 {{ searching() ? 'Buscando y rankeando…' : 'Buscar' }}
               </button>
               @if (results().length > 0) {
@@ -313,18 +426,24 @@
               <div class="hf-save-dialog">
                 <mat-form-field appearance="outline" class="hf-field-full">
                   <mat-label>Nombre de la búsqueda</mat-label>
-                  <input matInput placeholder="Ej. Backend LATAM remoto"
+                  <input
+                    matInput
+                    placeholder="Ej. Backend LATAM remoto"
                     [value]="saveNameValue()"
-                    (input)="saveNameValue.set($any($event.target).value)" />
+                    (input)="saveNameValue.set($any($event.target).value)"
+                  />
                 </mat-form-field>
-                <button type="button" mat-flat-button color="primary"
+                <button
+                  type="button"
+                  mat-flat-button
+                  color="primary"
                   [disabled]="!saveNameValue().trim() || savingSearch()"
-                  (click)="saveCurrentSearch()">
+                  (click)="saveCurrentSearch()"
+                >
                   {{ savingSearch() ? 'Guardando…' : 'Guardar' }}
                 </button>
               </div>
             }
-
           </form>
         </mat-card-content>
       </mat-card>
@@ -338,7 +457,10 @@
               <div class="hf-job__head">
                 <div style="flex: 1">
                   <div class="hf-skeleton hf-skeleton--title" style="width: 60%"></div>
-                  <div class="hf-skeleton hf-skeleton--line" style="width: 40%; margin-top: .5rem"></div>
+                  <div
+                    class="hf-skeleton hf-skeleton--line"
+                    style="width: 40%; margin-top: 0.5rem"
+                  ></div>
                 </div>
                 <div class="hf-skeleton hf-skeleton--score"></div>
               </div>
@@ -358,16 +480,22 @@
             <h2>
               Resultados
               @if (minScore() > 0) {
-                <span class="hf-results__count">{{ filteredResults().length }}/{{ results().length }}</span>
+                <span class="hf-results__count"
+                  >{{ filteredResults().length }}/{{ results().length }}</span
+                >
               } @else {
                 <span class="hf-results__count">{{ results().length }}</span>
               }
             </h2>
-            <button type="button" mat-stroked-button (click)="exportResults()">⬇ Exportar CSV</button>
+            <button type="button" mat-stroked-button (click)="exportResults()">
+              ⬇ Exportar CSV
+            </button>
           </div>
 
           <div class="hf-score-filter">
-            <span class="hf-muted">Score mínimo: <strong>{{ minScore() }}</strong></span>
+            <span class="hf-muted"
+              >Score mínimo: <strong>{{ minScore() }}</strong></span
+            >
             <mat-slider min="0" max="100" step="5" [displayWith]="scoreLabel">
               <input matSliderThumb [value]="minScore()" (valueChange)="minScore.set($event)" />
             </mat-slider>
@@ -411,13 +539,19 @@
                     <div class="hf-item__info">
                       <strong>{{ h.keywords }}</strong>
                       <span class="hf-muted">
-                        {{ h.location || 'cualquier lugar' }} · {{ h.count }} resultados · {{ h.createdAt | date:'dd/MM HH:mm' }}
+                        {{ h.location || 'cualquier lugar' }} · {{ h.count }} resultados ·
+                        {{ h.createdAt | date: 'dd/MM HH:mm' }}
                       </span>
                     </div>
                     <div class="hf-item__actions">
                       <button mat-stroked-button (click)="rerunHistory(h)">▶ Re-ejecutar</button>
-                      <button mat-icon-button aria-label="Eliminar historial"
-                        (click)="deleteHistory(h.id)">✕</button>
+                      <button
+                        mat-icon-button
+                        aria-label="Eliminar historial"
+                        (click)="deleteHistory(h.id)"
+                      >
+                        ✕
+                      </button>
                     </div>
                   </div>
                 }
@@ -426,8 +560,8 @@
           }
         </mat-card>
       }
-
-    </div><!-- /hf-layout__right -->
-  </div><!-- /hf-layout -->
-
+    </div>
+    <!-- /hf-layout__right -->
+  </div>
+  <!-- /hf-layout -->
 </div>
