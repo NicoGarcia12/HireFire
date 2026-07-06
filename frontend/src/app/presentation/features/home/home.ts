@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSliderModule } from '@angular/material/slider';
@@ -34,6 +35,7 @@ function csvToArray(value: string): string[] {
   imports: [
     ReactiveFormsModule,
     DatePipe,
+    RouterLink,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,

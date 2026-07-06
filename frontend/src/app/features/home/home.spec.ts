@@ -1,5 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { HomeDataPort, type HomeSearchPayload } from '../../application/home/home-data.port';
 import { Home } from './home';
@@ -25,7 +26,11 @@ describe('Home search language filters', () => {
 
     await TestBed.configureTestingModule({
       imports: [Home],
-      providers: [provideZonelessChangeDetection(), { provide: HomeDataPort, useValue: homeDataPortMock }]
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        { provide: HomeDataPort, useValue: homeDataPortMock }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Home);
