@@ -13,65 +13,17 @@ export interface ApplicationCreateDialogData {
 
 @Component({
   selector: 'hf-application-create-dialog',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatCheckboxModule, MatButtonModule],
+  imports: [
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatButtonModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h2 mat-dialog-title>Cargar postulación manual</h2>
-
-    <mat-dialog-content>
-      <form [formGroup]="form" class="hf-dialog-form">
-        @if (error()) {
-          <div class="hf-dialog-error">{{ error() }}</div>
-        }
-
-        <mat-form-field appearance="outline" class="hf-field-full">
-          <mat-label>Puesto *</mat-label>
-          <input matInput formControlName="title" />
-          <mat-error>Este campo es requerido</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="hf-field-full">
-          <mat-label>Empresa *</mat-label>
-          <input matInput formControlName="company" />
-          <mat-error>Este campo es requerido</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="hf-field-full">
-          <mat-label>Ubicación</mat-label>
-          <input matInput formControlName="location" />
-        </mat-form-field>
-
-        <mat-checkbox formControlName="remote">Remoto</mat-checkbox>
-
-        <mat-form-field appearance="outline" class="hf-field-full">
-          <mat-label>URL de la oferta</mat-label>
-          <input matInput formControlName="url" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="hf-field-full">
-          <mat-label>Descripción</mat-label>
-          <textarea matInput formControlName="description" rows="3"></textarea>
-        </mat-form-field>
-      </form>
-    </mat-dialog-content>
-
-    <mat-dialog-actions align="end">
-      <button mat-stroked-button mat-dialog-close [disabled]="saving()">Cancelar</button>
-      <button mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
-        {{ saving() ? 'Guardando…' : 'Guardar' }}
-      </button>
-    </mat-dialog-actions>
-  `,
-  styles: [`
-    h2[mat-dialog-title] { font-size: 1.1rem; }
-    .hf-dialog-form { display: flex; flex-direction: column; gap: .25rem; min-width: 320px; }
-    .hf-field-full { width: 100%; }
-    .hf-dialog-error {
-      background: #3a1c1c; border: 1px solid #6b2b2b; color: #ffb4b4;
-      padding: .5rem .75rem; border-radius: 8px; margin-bottom: .5rem; font-size: .85rem;
-    }
-    mat-dialog-actions { padding-bottom: .5rem; gap: .5rem; }
-  `]
+  templateUrl: './application-create-dialog.component.html',
+  styleUrl: './application-create-dialog.component.scss',
 })
 export class ApplicationCreateDialogComponent {
   private readonly fb = inject(FormBuilder);
@@ -88,7 +40,7 @@ export class ApplicationCreateDialogComponent {
     location: [''],
     remote: [false],
     url: [''],
-    description: ['']
+    description: [''],
   });
 
   constructor() {
@@ -115,12 +67,12 @@ export class ApplicationCreateDialogComponent {
         url: value.url || undefined,
         description: value.description,
         source: 'manual',
-        status: 'postulado'
+        status: 'postulado',
       },
       () => {
         this.saving.set(false);
         this.dialogRef.close(true);
-      }
+      },
     );
   }
 }
