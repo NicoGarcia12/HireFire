@@ -2,6 +2,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
 import { HomeDataPort, type HomeSearchPayload } from '../../application/home/home-data.port';
 import { ApplicationsDataPort } from '../../application/applications/applications-data.port';
 import { Home } from './home';
@@ -257,5 +258,161 @@ describe('Home dark/light theme toggle', () => {
 
     expect(reloadedFixture.componentInstance.isDarkMode()).toBe(false);
     expect(document.documentElement.classList.contains('light-mode')).toBe(true);
+  });
+});
+
+type FullHomeDataPortMock = Pick<
+  HomeDataPort,
+  'search' | 'getHistory' | 'getSavedSearches' | 'saveProfile' | 'importLinkedIn'
+>;
+
+function setupHomeWithMock(mock: FullHomeDataPortMock): Home {
+  TestBed.configureTestingModule({
+    imports: [Home],
+    providers: [
+      provideZonelessChangeDetection(),
+      provideRouter([]),
+      { provide: HomeDataPort, useValue: mock },
+      { provide: ApplicationsDataPort, useValue: { list: () => of([]) } as ApplicationsDataPortMock },
+    ],
+  });
+  const fixture = TestBed.createComponent(Home);
+  fixture.detectChanges();
+  return fixture.componentInstance;
+}
+
+describe('Home — pure helper methods', () => {
+  let component: Home;
+
+  beforeEach(() => {
+    component = setupHomeWithMock({
+      search: () => of({ count: 0, results: [] }),
+      getHistory: () => of([]),
+      getSavedSearches: () => of([]),
+      saveProfile: () => of({}) as never,
+      importLinkedIn: () => of({}) as never,
+    });
+  });
+
+  it('priorityClass() returns the high class for "alta"', () => {
+    expect(component.priorityClass('alta')).toBe('hf-priority--high');
+  });
+
+  it('priorityClass() returns the mid class for "media"', () => {
+    expect(component.priorityClass('media')).toBe('hf-priority--mid');
+  });
+
+  it('priorityClass() returns the low class for anything else', () => {
+    expect(component.priorityClass('baja')).toBe('hf-priority--low');
+  });
+
+  it('scoreClass() returns score--high for scores >= 75', () => {
+    expect(component.scoreClass(80)).toBe('score--high');
+  });
+
+  it('scoreClass() returns score--mid for scores between 50 and 74', () => {
+    expect(component.scoreClass(60)).toBe('score--mid');
+  });
+
+  it('scoreClass() returns score--low for scores below 50', () => {
+    expect(component.scoreClass(30)).toBe('score--low');
+  });
+
+  it('sectionLabel() maps known section keys to Spanish labels', () => {
+    expect(component.sectionLabel('headline')).toBe('Headline');
+  });
+
+  it('sectionLabel() falls back to the raw key when unknown', () => {
+    expect(component.sectionLabel('unknown-section')).toBe('unknown-section');
+  });
+});
+
+describe('Home — exportResults()', () => {
+  it('builds a CSV blob with one row per result and escapes embedded quotes', async () => {
+    // Arrange
+    const component = setupHomeWithMock({
+      search: () =>
+        of({
+          count: 1,
+          results: [
+            {
+              id: 'job-1',
+              title: 'Dev "Senior"',
+              company: 'Acme',
+              location: 'CABA',
+              remote: true,
+              description: '',
+              url: 'https://example.com/job',
+              score: 90,
+              reasons: [],
+              gaps: [],
+            },
+          ],
+        }),
+      getHistory: () => of([]),
+      getSavedSearches: () => of([]),
+      saveProfile: () => of({}) as never,
+      importLinkedIn: () => of({}) as never,
+    });
+    component.setProfileIdForTesting('profile-1');
+    component.runSearch({ keywords: 'dev', remote: false, limit: 30 });
+    let capturedBlob: Blob | undefined;
+    if (!('createObjectURL' in URL)) {
+      Object.defineProperty(URL, 'createObjectURL', {
+        value: () => '',
+        writable: true,
+        configurable: true,
+      });
+    }
+    if (!('revokeObjectURL' in URL)) {
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        value: () => {},
+        writable: true,
+        configurable: true,
+      });
+    }
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
+      capturedBlob = blob as Blob;
+      return 'blob:mock';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    // Act
+    component.exportResults();
+
+    // Assert
+    const csv = await capturedBlob?.text();
+    expect(csv).toContain('"Dev ""Senior"""');
+    expect(csv).toContain('Título,Empresa,Ubicación,Score,URL');
+  });
+});
+
+describe('Home — patchProfileImport() via onFileChange()', () => {
+  it('patches the profile form with the imported LinkedIn data', () => {
+    // Arrange
+    const importedData = {
+      headline: 'Imported headline',
+      summary: 'Imported summary',
+      skills: ['Node.js', 'TypeScript'],
+      experience: [{ title: 'Dev', company: 'Acme', description: 'Built things' }],
+    };
+    const component = setupHomeWithMock({
+      search: () => of({ count: 0, results: [] }),
+      getHistory: () => of([]),
+      getSavedSearches: () => of([]),
+      saveProfile: () => of({}) as never,
+      importLinkedIn: () => of(importedData) as never,
+    });
+    const file = new File(['zip'], 'profile.zip');
+    const input = { files: [file] } as unknown as HTMLInputElement;
+
+    // Act
+    component.onFileChange({ target: input } as unknown as Event);
+
+    // Assert
+    expect(component.profileForm.value.headline).toBe('Imported headline');
+    expect(component.profileForm.value.skills).toBe('Node.js, TypeScript');
+    expect(component.experience.length).toBe(1);
+    expect(component.experience.at(0).value.title).toBe('Dev');
   });
 });
