@@ -2,6 +2,7 @@ import { env } from '../../config/env.js';
 import { apify } from '../../utils/apify-client.js';
 import type { Job, JobSearchParams } from '../../types/job.types.js';
 import { logger } from '../../utils/logger.js';
+import { getCached, searchCacheKey, setCached } from '../../utils/search-cache.js';
 
 const LEGACY_KEYWORD_ACTOR = 'bebity~linkedin-jobs-scraper';
 const URL_SEARCH_ACTOR = 'curious_coder/linkedin-jobs-scraper';
@@ -105,6 +106,19 @@ function normalize(raw: RawApifyJob, index: number): Job {
  * Busca ofertas en LinkedIn por Apify con fallback al actor por URL si el actor legacy requiere alquiler.
  */
 export async function searchJobsController(params: JobSearchParams): Promise<Job[]> {
+  const cacheKey = searchCacheKey({
+    keywords: params.keywords,
+    location: params.location ?? '',
+    remote: params.remote ?? false,
+    limit: params.limit ?? 50,
+  });
+
+  const cached = getCached<Job[]>(cacheKey);
+  if (cached) {
+    logger.info('Apify: resultados servidos desde cache', { keywords: params.keywords });
+    return cached;
+  }
+
   const actor = getJobsActorConfig(env.apify.jobsActor);
 
   logger.info('Apify: ejecutando actor de jobs', {
@@ -117,6 +131,7 @@ export async function searchJobsController(params: JobSearchParams): Promise<Job
     const items = await loadActorItems(actor, params);
     const jobs = (items as RawApifyJob[]).map(normalize);
     logger.info(`Apify: ${jobs.length} ofertas recuperadas`);
+    setCached(cacheKey, jobs);
     return jobs;
   } catch (error) {
     if (!shouldFallbackToUrlActor(actor, error)) throw error;
@@ -129,6 +144,7 @@ export async function searchJobsController(params: JobSearchParams): Promise<Job
     const items = await loadActorItems(fallbackActor, params);
     const jobs = (items as RawApifyJob[]).map(normalize);
     logger.info(`Apify fallback: ${jobs.length} ofertas recuperadas`);
+    setCached(cacheKey, jobs);
     return jobs;
   }
 }

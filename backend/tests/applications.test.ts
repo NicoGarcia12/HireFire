@@ -1,5 +1,4 @@
-import { beforeEach, describe, it, mock } from 'node:test';
-import assert from 'node:assert/strict';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Application } from '../src/types/application.types.js';
 
 function baseApplication(overrides: Partial<Application> = {}): Application {
@@ -32,69 +31,73 @@ function baseApplication(overrides: Partial<Application> = {}): Application {
   };
 }
 
-const calls = {
-  create: [] as { data: Record<string, unknown> }[],
-  findMany: [] as { where: Record<string, unknown>; orderBy: Record<string, unknown> }[],
-  update: [] as { where: Record<string, unknown>; data: Record<string, unknown> }[],
-  delete: [] as { where: Record<string, unknown> }[],
-};
-let findManyResult: Application[] = [];
-
-// Mockea el import que usa applications-helper.ts para no tocar Prisma/DB real.
-// Debe registrarse antes de cualquier import de la cadena helper/controller.
-mock.module('../src/config/db.js', {
-  namedExports: {
-    prisma: {
-      application: {
-        create: async (args: { data: Record<string, unknown> }) => {
-          calls.create.push(args);
-          return baseApplication({ id: 'app-1' });
-        },
-        findMany: async (args: { where: Record<string, unknown>; orderBy: Record<string, unknown> }) => {
-          calls.findMany.push(args);
-          return findManyResult;
-        },
-        update: async (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
-          calls.update.push(args);
-          return baseApplication();
-        },
-        delete: async (args: { where: Record<string, unknown> }) => {
-          calls.delete.push(args);
-          return undefined;
-        },
-      },
+const mocks = vi.hoisted(() => {
+  let findManyResult: Application[] = [];
+  return {
+    setFindManyResult: (value: Application[]) => {
+      findManyResult = value;
     },
-  },
+    create: vi.fn(async (_args: { data: Record<string, unknown> }) =>
+      baseApplication({ id: 'app-1' }),
+    ),
+    findMany: vi.fn(
+      async (_args: { where: Record<string, unknown>; orderBy: Record<string, unknown> }) =>
+        findManyResult,
+    ),
+    update: vi.fn(
+      async (_args: { where: Record<string, unknown>; data: Record<string, unknown> }) =>
+        baseApplication(),
+    ),
+    delete: vi.fn(async (_args: { where: Record<string, unknown> }) => undefined),
+  };
 });
 
-const { createApplication, listApplicationsByProfile, updateApplication, updateApplicationStatus, deleteApplication } =
-  await import('../src/helpers/applications/applications-helper.js');
-const { createApplicationController } = await import('../src/controllers/applications/create-application-controller.js');
-const { listApplicationsController } = await import('../src/controllers/applications/list-applications-controller.js');
-const { updateApplicationStatusController } = await import(
-  '../src/controllers/applications/update-application-status-controller.js'
-);
-const { deleteApplicationController } = await import('../src/controllers/applications/delete-application-controller.js');
+vi.mock('../src/config/db.js', () => ({
+  prisma: {
+    application: {
+      create: mocks.create,
+      findMany: mocks.findMany,
+      update: mocks.update,
+      delete: mocks.delete,
+    },
+  },
+}));
+
+import {
+  createApplication,
+  listApplicationsByProfile,
+  updateApplication,
+  updateApplicationStatus,
+  deleteApplication,
+} from '../src/helpers/applications/applications-helper.js';
+import { createApplicationController } from '../src/controllers/applications/create-application-controller.js';
+import { listApplicationsController } from '../src/controllers/applications/list-applications-controller.js';
+import { updateApplicationStatusController } from '../src/controllers/applications/update-application-status-controller.js';
+import { deleteApplicationController } from '../src/controllers/applications/delete-application-controller.js';
 
 beforeEach(() => {
-  calls.create = [];
-  calls.findMany = [];
-  calls.update = [];
-  calls.delete = [];
-  findManyResult = [baseApplication()];
+  mocks.create.mockClear();
+  mocks.findMany.mockClear();
+  mocks.update.mockClear();
+  mocks.delete.mockClear();
+  mocks.setFindManyResult([baseApplication()]);
 });
 
 describe('applications-helper — createApplication', () => {
   it('applies defaults when optional fields are omitted', async () => {
-    await createApplication({ profileId: 'profile-1', title: 'Backend Developer', company: 'Acme' });
+    await createApplication({
+      profileId: 'profile-1',
+      title: 'Backend Developer',
+      company: 'Acme',
+    });
 
-    const [{ data }] = calls.create;
-    assert.equal(data['remote'], false);
-    assert.equal(data['description'], '');
-    assert.equal(data['source'], 'manual');
-    assert.equal(data['status'], 'postulado');
-    assert.deepEqual(data['tags'], []);
-    assert.equal(data['location'], null);
+    const data = mocks.create.mock.calls[0]?.[0].data ?? {};
+    expect(data['remote']).toBe(false);
+    expect(data['description']).toBe('');
+    expect(data['source']).toBe('manual');
+    expect(data['status']).toBe('postulado');
+    expect(data['tags']).toEqual([]);
+    expect(data['location']).toBe(null);
   });
 
   it('passes through provided optional fields', async () => {
@@ -107,10 +110,10 @@ describe('applications-helper — createApplication', () => {
       status: 'entrevista',
     });
 
-    const [{ data }] = calls.create;
-    assert.equal(data['source'], 'hirefire');
-    assert.equal(data['externalJobId'], 'job-42');
-    assert.equal(data['status'], 'entrevista');
+    const data = mocks.create.mock.calls[0]?.[0].data ?? {};
+    expect(data['source']).toBe('hirefire');
+    expect(data['externalJobId']).toBe('job-42');
+    expect(data['status']).toBe('entrevista');
   });
 });
 
@@ -122,8 +125,8 @@ describe('applications-controller — createApplicationController', () => {
       company: 'Acme',
     });
 
-    assert.equal(calls.create.length, 1);
-    assert.equal(result.id, 'app-1');
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    expect(result.id).toBe('app-1');
   });
 });
 
@@ -131,16 +134,16 @@ describe('applications-helper — listApplicationsByProfile', () => {
   it('filters by profileId only when no status is given', async () => {
     await listApplicationsByProfile('profile-1');
 
-    const [args] = calls.findMany;
-    assert.deepEqual(args.where, { profileId: 'profile-1' });
-    assert.deepEqual(args.orderBy, { appliedAt: 'desc' });
+    const args = mocks.findMany.mock.calls[0]?.[0];
+    expect(args?.where).toEqual({ profileId: 'profile-1' });
+    expect(args?.orderBy).toEqual({ appliedAt: 'desc' });
   });
 
   it('filters by profileId and status when status is given', async () => {
     await listApplicationsByProfile('profile-1', 'entrevista');
 
-    const [args] = calls.findMany;
-    assert.deepEqual(args.where, { profileId: 'profile-1', status: 'entrevista' });
+    const args = mocks.findMany.mock.calls[0]?.[0];
+    expect(args?.where).toEqual({ profileId: 'profile-1', status: 'entrevista' });
   });
 });
 
@@ -148,9 +151,9 @@ describe('applications-controller — listApplicationsController', () => {
   it('delegates profileId and status to the helper', async () => {
     const result = await listApplicationsController('profile-1', 'oferta');
 
-    const [args] = calls.findMany;
-    assert.deepEqual(args.where, { profileId: 'profile-1', status: 'oferta' });
-    assert.equal(result.length, 1);
+    const args = mocks.findMany.mock.calls[0]?.[0];
+    expect(args?.where).toEqual({ profileId: 'profile-1', status: 'oferta' });
+    expect(result.length).toBe(1);
   });
 });
 
@@ -158,9 +161,9 @@ describe('applications-helper — updateApplicationStatus', () => {
   it('updates only the status field for the given id', async () => {
     await updateApplicationStatus('app-1', 'oferta');
 
-    const [args] = calls.update;
-    assert.deepEqual(args.where, { id: 'app-1' });
-    assert.deepEqual(args.data, { status: 'oferta' });
+    const args = mocks.update.mock.calls[0]?.[0];
+    expect(args?.where).toEqual({ id: 'app-1' });
+    expect(args?.data).toEqual({ status: 'oferta' });
   });
 });
 
@@ -168,9 +171,9 @@ describe('applications-controller — updateApplicationStatusController', () => 
   it('delegates id and status to the helper', async () => {
     await updateApplicationStatusController('app-1', 'rechazado');
 
-    const [args] = calls.update;
-    assert.deepEqual(args.where, { id: 'app-1' });
-    assert.deepEqual(args.data, { status: 'rechazado' });
+    const args = mocks.update.mock.calls[0]?.[0];
+    expect(args?.where).toEqual({ id: 'app-1' });
+    expect(args?.data).toEqual({ status: 'rechazado' });
   });
 });
 
@@ -182,17 +185,17 @@ describe('applications-helper — updateApplication', () => {
       nextStepAt: '2026-02-10T00:00:00.000Z',
     });
 
-    const [args] = calls.update;
-    assert.equal(args.data['notes'], 'Segunda entrevista agendada');
-    assert.ok(args.data['appliedAt'] instanceof Date);
-    assert.ok(args.data['nextStepAt'] instanceof Date);
+    const data = mocks.update.mock.calls[0]?.[0].data ?? {};
+    expect(data['notes']).toBe('Segunda entrevista agendada');
+    expect(data['appliedAt']).toBeInstanceOf(Date);
+    expect(data['nextStepAt']).toBeInstanceOf(Date);
   });
 
   it('sets nextStepAt to null when explicitly cleared', async () => {
     await updateApplication('app-1', { nextStepAt: null });
 
-    const [args] = calls.update;
-    assert.equal(args.data['nextStepAt'], null);
+    const data = mocks.update.mock.calls[0]?.[0].data ?? {};
+    expect(data['nextStepAt']).toBe(null);
   });
 });
 
@@ -200,8 +203,8 @@ describe('applications-helper — deleteApplication', () => {
   it('deletes by id', async () => {
     await deleteApplication('app-1');
 
-    const [args] = calls.delete;
-    assert.deepEqual(args.where, { id: 'app-1' });
+    const args = mocks.delete.mock.calls[0]?.[0];
+    expect(args?.where).toEqual({ id: 'app-1' });
   });
 });
 
@@ -209,6 +212,6 @@ describe('applications-controller — deleteApplicationController', () => {
   it('delegates to the helper', async () => {
     await deleteApplicationController('app-1');
 
-    assert.equal(calls.delete.length, 1);
+    expect(mocks.delete).toHaveBeenCalledTimes(1);
   });
 });

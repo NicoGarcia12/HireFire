@@ -33,6 +33,9 @@ interface EnglishRequirementDetection {
 const LANGUAGE_LABELS: Record<SupportedLanguage, RegExp> = {
   english: /\b(ingl[eé]s|english)\b/iu,
   portuguese: /\b(portugu[eê]s|portugues|portuguese)\b/iu,
+  spanish: /\b(espa[nñ]ol|castellano|spanish)\b/iu,
+  french: /\b(franc[eé]s|franç?ais|french)\b/iu,
+  german: /\b(alem[aá]n|deutsch|german)\b/iu,
 };
 
 const LEVEL_BY_NATURAL_LANGUAGE: ReadonlyArray<readonly [RegExp, LanguageLevel]> = [
@@ -56,6 +59,26 @@ const ENGLISH_COPY_MARKERS: readonly RegExp[] = [
 const PORTUGUESE_COPY_MARKERS: readonly RegExp[] = [
   /\b(procuramos|pessoa\s+desenvolvedora|desenvolvedor(?:a)?|obrigat[oó]rios?|colaborar\s+com|times?\s+de\s+produto)\b/iu,
 ];
+
+const SPANISH_COPY_MARKERS: readonly RegExp[] = [
+  /\b(buscamos|estamos\s+buscando|se\s+valorar[aá]|imprescindible|conocimientos\s+en|a[nñ]os\s+de\s+experiencia)\b/iu,
+];
+
+const FRENCH_COPY_MARKERS: readonly RegExp[] = [
+  /\b(nous\s+recherchons|exigences|responsabilit[ée]s|exp[ée]rience\s+avec|collaborer\s+avec|[ée]quipes?\s+produit)\b/iu,
+];
+
+const GERMAN_COPY_MARKERS: readonly RegExp[] = [
+  /\b(wir\s+suchen|anforderungen|verantwortlichkeiten|erfahrung\s+mit|zusammenarbeiten\s+mit|produktteams?)\b/iu,
+];
+
+const COPY_MARKERS_BY_LANGUAGE: Record<SupportedLanguage, readonly RegExp[]> = {
+  english: ENGLISH_COPY_MARKERS,
+  portuguese: PORTUGUESE_COPY_MARKERS,
+  spanish: SPANISH_COPY_MARKERS,
+  french: FRENCH_COPY_MARKERS,
+  german: GERMAN_COPY_MARKERS,
+};
 
 function normalizeLanguageLevel(level: string): LanguageLevel | undefined {
   const normalized = level.trim().toUpperCase();
@@ -109,7 +132,7 @@ function detectLanguageRequirement(
 }
 
 function isLikelyWrittenIn(text: string, language: SupportedLanguage): boolean {
-  const markers = language === 'english' ? ENGLISH_COPY_MARKERS : PORTUGUESE_COPY_MARKERS;
+  const markers = COPY_MARKERS_BY_LANGUAGE[language];
   return markers.some((pattern) => pattern.test(text));
 }
 

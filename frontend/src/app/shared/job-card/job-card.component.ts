@@ -68,6 +68,9 @@ export class JobCardComponent {
   readonly languageLabels: Record<AllowedLanguageCode, string> = {
     english: 'Inglés',
     portuguese: 'Portugués',
+    spanish: 'Español',
+    french: 'Francés',
+    german: 'Alemán',
   };
 
   warningText(warning: LanguageWarning): string {

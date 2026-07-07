@@ -3,19 +3,40 @@
 // Custom M3 dark theme — deep-orange primary to match HireFire's accent (#ff6a3d)
 html {
   @include mat.core();
-  @include mat.theme((
-    color: (
-      theme-type: dark,
-      primary: mat.$orange-palette,
-    ),
-    typography: (
-      brand-family: 'Inter, system-ui, sans-serif',
-      bold-weight: 700,
-    ),
-    density: (
-      scale: 0,
-    ),
-  ));
+  @include mat.theme(
+    (
+      color: (
+        theme-type: dark,
+        primary: mat.$orange-palette,
+      ),
+      typography: (
+        brand-family: 'Inter, system-ui, sans-serif',
+        bold-weight: 700,
+      ),
+      density: (
+        scale: 0,
+      ),
+    )
+  );
+}
+
+// Light variant, toggled at runtime via the `light-mode` class on <html>
+html.light-mode {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$orange-palette,
+      ),
+      typography: (
+        brand-family: 'Inter, system-ui, sans-serif',
+        bold-weight: 700,
+      ),
+      density: (
+        scale: 0,
+      ),
+    )
+  );
 }
 
 *,
