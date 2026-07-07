@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>Cargar postulación manual</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="hf-dialog-form">
+    @if (error()) {
+      <div class="hf-dialog-error">{{ error() }}</div>
+    }
+
+    <mat-form-field appearance="outline" class="hf-field-full">
+      <mat-label>Puesto *</mat-label>
+      <input matInput formControlName="title" />
+      <mat-error>Este campo es requerido</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="hf-field-full">
+      <mat-label>Empresa *</mat-label>
+      <input matInput formControlName="company" />
+      <mat-error>Este campo es requerido</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="hf-field-full">
+      <mat-label>Ubicación</mat-label>
+      <input matInput formControlName="location" />
+    </mat-form-field>
+
+    <mat-checkbox formControlName="remote">Remoto</mat-checkbox>
+
+    <mat-form-field appearance="outline" class="hf-field-full">
+      <mat-label>URL de la oferta</mat-label>
+      <input matInput formControlName="url" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="hf-field-full">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="description" rows="3"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button mat-dialog-close [disabled]="saving()">Cancelar</button>
+  <button mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Guardando…' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

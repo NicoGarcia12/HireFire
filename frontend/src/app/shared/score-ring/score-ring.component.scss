@@ -1,0 +1,65 @@
+.hf-score-ring {
+  flex-shrink: 0;
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  &__track {
+    fill: none;
+    stroke: #2a2e3a;
+    stroke-width: 3;
+  }
+
+  &__fill {
+    fill: none;
+    stroke-width: 3;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    stroke-linecap: round;
+    transition:
+      stroke-dashoffset 0.4s ease,
+      stroke 0.25s;
+  }
+
+  &__value {
+    position: relative;
+    font-weight: 700;
+    font-size: 0.85rem;
+    z-index: 1;
+  }
+
+  &.score--high {
+    .hf-score-ring__fill {
+      stroke: #7ee0a1;
+    }
+    .hf-score-ring__value {
+      color: #7ee0a1;
+    }
+  }
+  &.score--mid {
+    .hf-score-ring__fill {
+      stroke: #e0d27e;
+    }
+    .hf-score-ring__value {
+      color: #e0d27e;
+    }
+  }
+  &.score--low {
+    .hf-score-ring__fill {
+      stroke: #e09a9a;
+    }
+    .hf-score-ring__value {
+      color: #e09a9a;
+    }
+  }
+}

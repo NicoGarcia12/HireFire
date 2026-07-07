@@ -1,0 +1,64 @@
+<mat-card class="hf-job-card">
+  <div class="hf-job__head">
+    <div class="hf-job__info">
+      <h3>{{ job().title }}</h3>
+      <p class="hf-job__meta">
+        {{ job().company }}
+        @if (job().location) {
+          · {{ job().location }}
+        }
+        @if (job().remote) {
+          <span class="hf-tag">Remoto</span>
+        }
+      </p>
+    </div>
+    <hf-score-ring [score]="job().score" />
+  </div>
+
+  <mat-card-content>
+    @if (job().reasons.length) {
+      <div class="hf-block">
+        <strong>Por qué encajás</strong>
+        <ul>
+          @for (r of job().reasons; track r) {
+            <li>{{ r }}</li>
+          }
+        </ul>
+      </div>
+    }
+    @if (job().gaps.length) {
+      <div class="hf-block hf-block--gaps">
+        <strong>Qué te falta</strong>
+        <ul>
+          @for (g of job().gaps; track g) {
+            <li>{{ g }}</li>
+          }
+        </ul>
+      </div>
+    }
+    @if (job().languageWarnings?.length) {
+      <div class="hf-block hf-block--warnings">
+        <strong>Advertencias de idioma</strong>
+        <ul>
+          @for (w of job().languageWarnings!; track $index) {
+            <li>{{ warningText(w) }}</li>
+          }
+        </ul>
+      </div>
+    }
+    <div class="hf-job__actions">
+      @if (alreadyApplied()) {
+        <span class="hf-pill hf-pill--applied">Ya postulado ✓</span>
+      } @else {
+        <button mat-stroked-button [disabled]="!profileId() || submitting()" (click)="apply()">
+          {{ submitting() ? 'Postulando…' : 'Me postulé' }}
+        </button>
+      }
+      @if (job().url) {
+        <a mat-button color="primary" [href]="job().url" target="_blank" rel="noopener">
+          Ver oferta ↗
+        </a>
+      }
+    </div>
+  </mat-card-content>
+</mat-card>
