@@ -1,6 +1,9 @@
 import { DestroyRef, Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { APPLICATION_STATUSES, type ApplicationStatus } from '../../domain/applications/enums/application-status.enum';
+import {
+  APPLICATION_STATUSES,
+  type ApplicationStatus,
+} from '../../domain/applications/enums/application-status.enum';
 import type { Application } from '../../domain/applications/models/application.model';
 import {
   ApplicationsDataPort,
@@ -57,11 +60,14 @@ export class ApplicationsFacade {
         error: (error: unknown) => {
           this.errorSignal.set(this.messageFromError(error));
           this.loadingSignal.set(false);
-        }
+        },
       });
   }
 
-  public create(payload: ApplicationCreatePayload, onCreated?: (application: Application) => void): void {
+  public create(
+    payload: ApplicationCreatePayload,
+    onCreated?: (application: Application) => void,
+  ): void {
     this.errorSignal.set(null);
 
     this.dataPort
@@ -72,11 +78,15 @@ export class ApplicationsFacade {
           this.applicationsSignal.update((applications) => [application, ...applications]);
           onCreated?.(application);
         },
-        error: (error: unknown) => this.errorSignal.set(this.messageFromError(error))
+        error: (error: unknown) => this.errorSignal.set(this.messageFromError(error)),
       });
   }
 
-  public update(id: string, payload: ApplicationUpdatePayload, onUpdated?: (application: Application) => void): void {
+  public update(
+    id: string,
+    payload: ApplicationUpdatePayload,
+    onUpdated?: (application: Application) => void,
+  ): void {
     this.errorSignal.set(null);
 
     this.dataPort
@@ -87,7 +97,7 @@ export class ApplicationsFacade {
           this.replace(application);
           onUpdated?.(application);
         },
-        error: (error: unknown) => this.errorSignal.set(this.messageFromError(error))
+        error: (error: unknown) => this.errorSignal.set(this.messageFromError(error)),
       });
   }
 
@@ -99,7 +109,9 @@ export class ApplicationsFacade {
     this.errorSignal.set(null);
     const previous = this.applicationsSignal();
     this.applicationsSignal.update((applications) =>
-      applications.map((application) => (application.id === id ? { ...application, status } : application))
+      applications.map((application) =>
+        application.id === id ? { ...application, status } : application,
+      ),
     );
 
     this.dataPort
@@ -110,7 +122,7 @@ export class ApplicationsFacade {
         error: (error: unknown) => {
           this.applicationsSignal.set(previous);
           this.errorSignal.set(this.messageFromError(error));
-        }
+        },
       });
   }
 
@@ -121,14 +133,17 @@ export class ApplicationsFacade {
       .delete(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.applicationsSignal.update((applications) => applications.filter((application) => application.id !== id)),
-        error: (error: unknown) => this.errorSignal.set(this.messageFromError(error))
+        next: () =>
+          this.applicationsSignal.update((applications) =>
+            applications.filter((application) => application.id !== id),
+          ),
+        error: (error: unknown) => this.errorSignal.set(this.messageFromError(error)),
       });
   }
 
   private replace(application: Application): void {
     this.applicationsSignal.update((applications) =>
-      applications.map((existing) => (existing.id === application.id ? application : existing))
+      applications.map((existing) => (existing.id === application.id ? application : existing)),
     );
   }
 
@@ -136,7 +151,8 @@ export class ApplicationsFacade {
    * Normaliza errores externos para no filtrar detalles de HttpErrorResponse a la template.
    */
   private messageFromError(error: unknown): string {
-    if (error && typeof error === 'object' && 'message' in error) return String((error as { message: unknown }).message);
+    if (error && typeof error === 'object' && 'message' in error)
+      return String((error as { message: unknown }).message);
     return 'Error — ¿el backend está corriendo en :3000?';
   }
 }

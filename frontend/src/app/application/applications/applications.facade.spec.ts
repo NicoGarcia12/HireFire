@@ -32,7 +32,7 @@ function makeApplication(overrides: Partial<Application> = {}): Application {
     tags: [],
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -42,7 +42,7 @@ function makeDataPortMock(): ApplicationsDataPort {
     create: vi.fn().mockReturnValue(of(makeApplication())),
     update: vi.fn().mockReturnValue(of(makeApplication())),
     updateStatus: vi.fn().mockReturnValue(of(makeApplication())),
-    delete: vi.fn().mockReturnValue(of(undefined))
+    delete: vi.fn().mockReturnValue(of(undefined)),
   } as unknown as ApplicationsDataPort;
 }
 
@@ -50,7 +50,11 @@ function setup(): { facade: ApplicationsFacade; dataPort: ApplicationsDataPort }
   const dataPort = makeDataPortMock();
 
   TestBed.configureTestingModule({
-    providers: [provideZonelessChangeDetection(), ApplicationsFacade, { provide: ApplicationsDataPort, useValue: dataPort }]
+    providers: [
+      provideZonelessChangeDetection(),
+      ApplicationsFacade,
+      { provide: ApplicationsDataPort, useValue: dataPort },
+    ],
   });
 
   return { facade: TestBed.inject(ApplicationsFacade), dataPort };
@@ -92,7 +96,9 @@ describe('ApplicationsFacade — load()', () => {
 
   it('populates applications after a successful load', () => {
     const { facade, dataPort } = setup();
-    vi.mocked(dataPort.list).mockReturnValue(of([makeApplication(), makeApplication({ id: 'app-2' })]));
+    vi.mocked(dataPort.list).mockReturnValue(
+      of([makeApplication(), makeApplication({ id: 'app-2' })]),
+    );
 
     facade.load('profile-1');
     expect(facade.applications()).toHaveLength(2);
@@ -107,7 +113,10 @@ describe('ApplicationsFacade — load()', () => {
   it('groups applications by status via byStatus', () => {
     const { facade, dataPort } = setup();
     vi.mocked(dataPort.list).mockReturnValue(
-      of([makeApplication({ id: 'a1', status: 'postulado' }), makeApplication({ id: 'a2', status: 'oferta' })])
+      of([
+        makeApplication({ id: 'a1', status: 'postulado' }),
+        makeApplication({ id: 'a2', status: 'oferta' }),
+      ]),
     );
 
     facade.load('profile-1');
@@ -176,7 +185,9 @@ describe('ApplicationsFacade — update()', () => {
 describe('ApplicationsFacade — updateStatus()', () => {
   it('updates the status optimistically before the server responds', () => {
     const { facade, dataPort } = setup();
-    vi.mocked(dataPort.list).mockReturnValue(of([makeApplication({ id: 'app-1', status: 'postulado' })]));
+    vi.mocked(dataPort.list).mockReturnValue(
+      of([makeApplication({ id: 'app-1', status: 'postulado' })]),
+    );
     facade.load('profile-1');
 
     const subject = new Subject<Application>();
@@ -189,7 +200,9 @@ describe('ApplicationsFacade — updateStatus()', () => {
 
   it('rolls back to the previous value when the server call fails', () => {
     const { facade, dataPort } = setup();
-    vi.mocked(dataPort.list).mockReturnValue(of([makeApplication({ id: 'app-1', status: 'postulado' })]));
+    vi.mocked(dataPort.list).mockReturnValue(
+      of([makeApplication({ id: 'app-1', status: 'postulado' })]),
+    );
     facade.load('profile-1');
 
     const subject = new Subject<Application>();
@@ -206,7 +219,9 @@ describe('ApplicationsFacade — updateStatus()', () => {
 describe('ApplicationsFacade — delete()', () => {
   it('removes the application from the list', () => {
     const { facade, dataPort } = setup();
-    vi.mocked(dataPort.list).mockReturnValue(of([makeApplication({ id: 'app-1' }), makeApplication({ id: 'app-2' })]));
+    vi.mocked(dataPort.list).mockReturnValue(
+      of([makeApplication({ id: 'app-1' }), makeApplication({ id: 'app-2' })]),
+    );
     facade.load('profile-1');
 
     facade.delete('app-1');
