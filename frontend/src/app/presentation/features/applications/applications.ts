@@ -9,7 +9,10 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { ApplicationsFacade } from '../../../application/applications/applications.facade';
 import { HomeFacade } from '../../../application/home/home.facade';
-import { APPLICATION_STATUSES, type ApplicationStatus } from '../../../domain/applications/enums/application-status.enum';
+import {
+  APPLICATION_STATUSES,
+  type ApplicationStatus,
+} from '../../../domain/applications/enums/application-status.enum';
 import type { Application } from '../../../domain/applications/models/application.model';
 import { ApplicationCreateDialogComponent } from './application-create-dialog.component';
 import { ApplicationEditDialogComponent } from './application-edit-dialog.component';
@@ -25,10 +28,19 @@ const STATUS_LABELS: Record<ApplicationStatus, string> = {
 
 @Component({
   selector: 'app-applications',
-  imports: [DatePipe, RouterLink, MatButtonModule, MatCardModule, MatDialogModule, MatFormFieldModule, MatOptionModule, MatSelectModule],
+  imports: [
+    DatePipe,
+    RouterLink,
+    MatButtonModule,
+    MatCardModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatOptionModule,
+    MatSelectModule,
+  ],
   templateUrl: './applications.html',
   styleUrl: './applications.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Applications {
   private readonly facade = inject(ApplicationsFacade);
@@ -61,14 +73,18 @@ export class Applications {
 
     this.dialog.open(ApplicationCreateDialogComponent, {
       data: { profileId },
-      width: '480px'
+      width: '480px',
     });
   }
 
   public openEditDialog(application: Application): void {
     this.dialog.open(ApplicationEditDialogComponent, {
       data: { application },
-      width: '520px'
+      width: '520px',
     });
+  }
+
+  public deleteApplication(application: Application): void {
+    this.facade.delete(application.id);
   }
 }
