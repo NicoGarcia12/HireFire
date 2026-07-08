@@ -18,8 +18,8 @@ describe('App', () => {
         provideRouter(routes),
         provideHttpClient(),
         { provide: HomeDataPort, useExisting: ApiService },
-        { provide: ApplicationsDataPort, useExisting: ApiService }
-      ]
+        { provide: ApplicationsDataPort, useExisting: ApiService },
+      ],
     }).compileComponents();
   });
 

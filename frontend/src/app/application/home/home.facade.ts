@@ -5,7 +5,12 @@ import type { ProfileAnalysis } from '../../domain/profile/models/profile-analys
 import type { SavedSearch } from '../../domain/search/models/saved-search.model';
 import type { SearchRecord } from '../../domain/search/models/search-record.model';
 import type { MatchResult } from '../../domain/matching/models/match-result.model';
-import { HomeDataPort, type HomeProfilePayload, type HomeSavedSearchPayload, type HomeSearchPayload } from './home-data.port';
+import {
+  HomeDataPort,
+  type HomeProfilePayload,
+  type HomeSavedSearchPayload,
+  type HomeSearchPayload,
+} from './home-data.port';
 import { StorageService } from '../../core/storage.service';
 
 /**
@@ -76,7 +81,7 @@ export class HomeFacade {
         error: (error: unknown) => {
           this.errorSignal.set(this.messageFromError(error));
           this.savingProfileSignal.set(false);
-        }
+        },
       });
   }
 
@@ -98,7 +103,7 @@ export class HomeFacade {
         error: (error: unknown) => {
           this.errorSignal.set(this.messageFromError(error));
           this.importingSignal.set(false);
-        }
+        },
       });
   }
 
@@ -121,7 +126,7 @@ export class HomeFacade {
         error: (error: unknown) => {
           this.errorSignal.set(this.messageFromError(error));
           this.analyzingSignal.set(false);
-        }
+        },
       });
   }
 
@@ -150,7 +155,7 @@ export class HomeFacade {
           this.errorSignal.set(this.messageFromError(error));
           this.searchingSignal.set(false);
           this.searchedSignal.set(true);
-        }
+        },
       });
   }
 
@@ -164,7 +169,10 @@ export class HomeFacade {
       .subscribe({ next: (saved) => this.savedSignal.set(saved) });
   }
 
-  public saveCurrentSearch(payload: Omit<HomeSavedSearchPayload, 'profileId'>, onSaved?: () => void): void {
+  public saveCurrentSearch(
+    payload: Omit<HomeSavedSearchPayload, 'profileId'>,
+    onSaved?: () => void,
+  ): void {
     const id = this.profileIdSignal();
     if (!id) return;
 
@@ -182,7 +190,7 @@ export class HomeFacade {
         error: (error: unknown) => {
           this.errorSignal.set(this.messageFromError(error));
           this.savingSearchSignal.set(false);
-        }
+        },
       });
   }
 
@@ -218,7 +226,8 @@ export class HomeFacade {
    * Normaliza errores externos para no filtrar detalles de HttpErrorResponse a la template.
    */
   private messageFromError(error: unknown): string {
-    if (error && typeof error === 'object' && 'message' in error) return String((error as { message: unknown }).message);
+    if (error && typeof error === 'object' && 'message' in error)
+      return String((error as { message: unknown }).message);
     return 'Error — ¿el backend está corriendo en :3000?';
   }
 }

@@ -2,7 +2,11 @@ import { Observable } from 'rxjs';
 import type { AllowedLanguage } from '../../domain/matching/models/allowed-language.model';
 import type { LinkedInImport } from '../../domain/profile/models/linkedin-import.model';
 import type { ProfileAnalysis } from '../../domain/profile/models/profile-analysis.model';
-import type { Profile, ProfileExperience, ProfilePreferences } from '../../domain/profile/models/profile.model';
+import type {
+  Profile,
+  ProfileExperience,
+  ProfilePreferences,
+} from '../../domain/profile/models/profile.model';
 import type { SavedSearch } from '../../domain/search/models/saved-search.model';
 import type { SearchRecord } from '../../domain/search/models/search-record.model';
 import type { MatchResult } from '../../domain/matching/models/match-result.model';

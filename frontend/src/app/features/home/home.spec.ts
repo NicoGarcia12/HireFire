@@ -273,7 +273,10 @@ function setupHomeWithMock(mock: FullHomeDataPortMock): Home {
       provideZonelessChangeDetection(),
       provideRouter([]),
       { provide: HomeDataPort, useValue: mock },
-      { provide: ApplicationsDataPort, useValue: { list: () => of([]) } as ApplicationsDataPortMock },
+      {
+        provide: ApplicationsDataPort,
+        useValue: { list: () => of([]) } as ApplicationsDataPortMock,
+      },
     ],
   });
   const fixture = TestBed.createComponent(Home);
