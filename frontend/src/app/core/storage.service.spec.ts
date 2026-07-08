@@ -8,8 +8,12 @@ describe('StorageService', () => {
   beforeEach(() => {
     store = {};
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => store[key] ?? null);
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key, value) => { store[key] = value; });
-    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation((key) => { delete store[key]; });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key, value) => {
+      store[key] = value;
+    });
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation((key) => {
+      delete store[key];
+    });
 
     service = new StorageService();
   });

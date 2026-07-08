@@ -7,17 +7,53 @@ import { HomeDataPort } from './home-data.port';
 import { HomeFacade } from './home.facade';
 import { StorageService } from '../../core/storage.service';
 
-const PROFILE = { id: 'p1', headline: 'Dev', summary: '', skills: [] as string[], experience: [] as never[], preferences: { locations: [] as string[], remote: false } };
-const RESULTS = { count: 2, results: [
-  { id: 'r1', title: 'Dev', company: 'Acme', location: 'BA', score: 90, remote: true, description: '', url: '', reasons: [] as string[], gaps: [] as string[] },
-  { id: 'r2', title: 'Lead', company: 'Corp', location: 'BA', score: 60, remote: false, description: '', url: '', reasons: [] as string[], gaps: [] as string[] },
-]};
+const PROFILE = {
+  id: 'p1',
+  headline: 'Dev',
+  summary: '',
+  skills: [] as string[],
+  experience: [] as never[],
+  preferences: { locations: [] as string[], remote: false },
+};
+const RESULTS = {
+  count: 2,
+  results: [
+    {
+      id: 'r1',
+      title: 'Dev',
+      company: 'Acme',
+      location: 'BA',
+      score: 90,
+      remote: true,
+      description: '',
+      url: '',
+      reasons: [] as string[],
+      gaps: [] as string[],
+    },
+    {
+      id: 'r2',
+      title: 'Lead',
+      company: 'Corp',
+      location: 'BA',
+      score: 60,
+      remote: false,
+      description: '',
+      url: '',
+      reasons: [] as string[],
+      gaps: [] as string[],
+    },
+  ],
+};
 
 function makeDataPortMock(): HomeDataPort {
   return {
     saveProfile: vi.fn().mockReturnValue(of(PROFILE)),
-    importLinkedIn: vi.fn().mockReturnValue(of({ headline: '', summary: '', skills: [], experience: [] })),
-    analyzeProfile: vi.fn().mockReturnValue(of({ score: 80, strengths: [], gaps: [], recommendations: [] })),
+    importLinkedIn: vi
+      .fn()
+      .mockReturnValue(of({ headline: '', summary: '', skills: [], experience: [] })),
+    analyzeProfile: vi
+      .fn()
+      .mockReturnValue(of({ score: 80, strengths: [], gaps: [], recommendations: [] })),
     search: vi.fn().mockReturnValue(of(RESULTS)),
     getSavedSearches: vi.fn().mockReturnValue(of([])),
     saveSearch: vi.fn().mockReturnValue(of({ id: 's1' })),
@@ -32,12 +68,18 @@ function makeStorageMock(storedProfileId: string | null = null): StorageService 
   if (storedProfileId) store['hirefire_profile_id'] = storedProfileId;
   return {
     get: vi.fn((key: string) => store[key] ?? null),
-    set: vi.fn((key: string, value: string) => { store[key] = value; }),
+    set: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
     remove: vi.fn(),
   } as unknown as StorageService;
 }
 
-function setup(storedProfileId: string | null = null): { facade: HomeFacade; dataPort: HomeDataPort; storage: StorageService } {
+function setup(storedProfileId: string | null = null): {
+  facade: HomeFacade;
+  dataPort: HomeDataPort;
+  storage: StorageService;
+} {
   const dataPort = makeDataPortMock();
   const storage = makeStorageMock(storedProfileId);
 
@@ -47,18 +89,26 @@ function setup(storedProfileId: string | null = null): { facade: HomeFacade; dat
       HomeFacade,
       { provide: HomeDataPort, useValue: dataPort },
       { provide: StorageService, useValue: storage },
-    ]
+    ],
   });
 
   return { facade: TestBed.inject(HomeFacade), dataPort, storage };
 }
 
 const SEARCH_PAYLOAD: Omit<HomeSearchPayload, 'profileId'> = {
-  keywords: 'dev', location: undefined, remote: false, limit: 10, allowedLanguages: [],
+  keywords: 'dev',
+  location: undefined,
+  remote: false,
+  limit: 10,
+  allowedLanguages: [],
 };
 
 const PROFILE_PAYLOAD: HomeProfilePayload = {
-  headline: 'Dev', summary: '', skills: [], experience: [], preferences: { locations: [], remote: false },
+  headline: 'Dev',
+  summary: '',
+  skills: [],
+  experience: [],
+  preferences: { locations: [], remote: false },
 };
 
 describe('HomeFacade — initial state', () => {
@@ -149,7 +199,7 @@ describe('HomeFacade — runSearch()', () => {
     const { facade, dataPort } = setup('p1');
     facade.runSearch({ ...SEARCH_PAYLOAD, keywords: 'backend' });
     expect(dataPort.search).toHaveBeenCalledWith(
-      expect.objectContaining({ profileId: 'p1', keywords: 'backend' })
+      expect.objectContaining({ profileId: 'p1', keywords: 'backend' }),
     );
   });
 
@@ -170,10 +220,13 @@ describe('HomeFacade — runSearch()', () => {
 describe('HomeFacade — delete operations', () => {
   it('deleteSaved() calls API and reloads saved list', () => {
     const { facade, dataPort } = setup('p1');
-    const getSavedCallsBefore = (dataPort.getSavedSearches as ReturnType<typeof vi.fn>).mock.calls.length;
+    const getSavedCallsBefore = (dataPort.getSavedSearches as ReturnType<typeof vi.fn>).mock.calls
+      .length;
     facade.deleteSaved('s1');
     expect(dataPort.deleteSavedSearch).toHaveBeenCalledWith('s1');
-    expect((dataPort.getSavedSearches as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(getSavedCallsBefore);
+    expect(
+      (dataPort.getSavedSearches as ReturnType<typeof vi.fn>).mock.calls.length,
+    ).toBeGreaterThan(getSavedCallsBefore);
   });
 
   it('deleteHistory() calls API and reloads history', () => {
@@ -181,6 +234,8 @@ describe('HomeFacade — delete operations', () => {
     const histCallsBefore = (dataPort.getHistory as ReturnType<typeof vi.fn>).mock.calls.length;
     facade.deleteHistory('h1');
     expect(dataPort.deleteHistory).toHaveBeenCalledWith('h1');
-    expect((dataPort.getHistory as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(histCallsBefore);
+    expect((dataPort.getHistory as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(
+      histCallsBefore,
+    );
   });
 });

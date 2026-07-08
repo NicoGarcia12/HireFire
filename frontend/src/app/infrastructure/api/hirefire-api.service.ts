@@ -1,7 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HomeDataPort, type HomeProfilePayload, type HomeSavedSearchPayload, type HomeSearchPayload } from '../../application/home/home-data.port';
+import {
+  HomeDataPort,
+  type HomeProfilePayload,
+  type HomeSavedSearchPayload,
+  type HomeSearchPayload,
+} from '../../application/home/home-data.port';
 import {
   ApplicationsDataPort,
   type ApplicationCreatePayload,
