@@ -4,7 +4,6 @@ import type { Job, JobSearchParams } from '../../types/job.types.js';
 import { logger } from '../../utils/logger.js';
 import { getCached, searchCacheKey, setCached } from '../../utils/search-cache.js';
 
-const LEGACY_KEYWORD_ACTOR = 'bebity~linkedin-jobs-scraper';
 const URL_SEARCH_ACTOR = 'curious_coder/linkedin-jobs-scraper';
 
 type JobsActorStrategy = 'keyword-input' | 'linkedin-search-url';
@@ -37,18 +36,6 @@ function getJobsActorConfig(actorId: string): JobsActorConfig {
     return { actorId, strategy: 'linkedin-search-url' };
   }
   return { actorId, strategy: 'keyword-input' };
-}
-
-function isActorRentalError(error: unknown): error is Error {
-  return error instanceof Error && error.message.includes('You must rent a paid Actor');
-}
-
-function shouldFallbackToUrlActor(actor: JobsActorConfig, error: unknown): boolean {
-  return (
-    actor.actorId === LEGACY_KEYWORD_ACTOR &&
-    actor.strategy === 'keyword-input' &&
-    isActorRentalError(error)
-  );
 }
 
 function buildLinkedInSearchUrl(params: JobSearchParams): string {
@@ -102,8 +89,16 @@ function normalize(raw: RawApifyJob, index: number): Job {
   };
 }
 
+/** Agrega un job al mapa de dedup si no está duplicado (por URL o ID). */
+function addIfNew(jobsMap: Map<string, Job>, job: Job): void {
+  const key = job.url || job.id;
+  if (!jobsMap.has(key)) jobsMap.set(key, job);
+}
+
 /**
- * Busca ofertas en LinkedIn por Apify con fallback al actor por URL si el actor legacy requiere alquiler.
+ * Busca ofertas en LinkedIn probando TODOS los actores Apify configurados.
+ * Los resultados se combinan desduplicando por URL.
+ * Si un actor falla, se loguea el error y se continúa con el siguiente.
  */
 export async function searchJobsController(params: JobSearchParams): Promise<Job[]> {
   const cacheKey = searchCacheKey({
@@ -119,32 +114,34 @@ export async function searchJobsController(params: JobSearchParams): Promise<Job
     return cached;
   }
 
-  const actor = getJobsActorConfig(env.apify.jobsActor);
+  const allJobs = new Map<string, Job>();
+  const actors = env.apify.jobsActors;
 
-  logger.info('Apify: ejecutando actor de jobs', {
-    actor: actor.actorId,
-    keywords: params.keywords,
-    limit: params.limit ?? 50,
-  });
+  for (const actorId of actors) {
+    const config = getJobsActorConfig(actorId);
 
-  try {
-    const items = await loadActorItems(actor, params);
-    const jobs = (items as RawApifyJob[]).map(normalize);
-    logger.info(`Apify: ${jobs.length} ofertas recuperadas`);
-    setCached(cacheKey, jobs);
-    return jobs;
-  } catch (error) {
-    if (!shouldFallbackToUrlActor(actor, error)) throw error;
+    logger.info('Apify: ejecutando actor de jobs', {
+      actor: actorId,
+      keywords: params.keywords,
+      limit: params.limit ?? 50,
+    });
 
-    logger.warn(`Apify: actor legacy no disponible. Fallback automático a ${URL_SEARCH_ACTOR}.`);
-    const fallbackActor: JobsActorConfig = {
-      actorId: URL_SEARCH_ACTOR,
-      strategy: 'linkedin-search-url',
-    };
-    const items = await loadActorItems(fallbackActor, params);
-    const jobs = (items as RawApifyJob[]).map(normalize);
-    logger.info(`Apify fallback: ${jobs.length} ofertas recuperadas`);
-    setCached(cacheKey, jobs);
-    return jobs;
+    try {
+      const items = await loadActorItems(config, params);
+      const jobs = (items as RawApifyJob[]).map((raw, i) => normalize(raw, i));
+      logger.info(`Apify [${actorId}]: ${jobs.length} ofertas recuperadas`);
+
+      for (const job of jobs) addIfNew(allJobs, job);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'desconocido';
+      logger.warn(`Apify [${actorId}]: error — ${message}`);
+      // No interrumpimos: probamos el siguiente actor
+    }
   }
+
+  const uniqueJobs = [...allJobs.values()];
+  logger.info(`Apify: ${uniqueJobs.length} ofertas únicas combinadas de ${actors.length} actor(es)`);
+
+  setCached(cacheKey, uniqueJobs);
+  return uniqueJobs;
 }
