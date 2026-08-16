@@ -1,0 +1,69 @@
+name: Cut Release
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cut-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@git-cliff
+
+      - name: Compute next version
+        id: version
+        run: |
+          NEXT=$(git cliff --bumped-version)
+          if [ -z "$NEXT" ]; then
+            echo "No hay commits nuevos desde el último release, no hace falta cortar uno." >&2
+            exit 1
+          fi
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "version=${NEXT#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release branch
+        run: git checkout -b release/${{ steps.version.outputs.version }}
+
+      - name: Generate changelog
+        run: |
+          git cliff --tag ${{ steps.version.outputs.next }} --prepend CHANGELOG.md --unreleased
+          if [ ! -s CHANGELOG.md ]; then
+            git cliff --tag ${{ steps.version.outputs.next }} --output CHANGELOG.md
+          fi
+
+      - name: Bump package.json version(s)
+        run: |
+          for pkg in package.json backend/package.json frontend/package.json; do
+            if [ -f "$pkg" ]; then
+              (cd "$(dirname "$pkg")" && npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version)
+            fi
+          done
+
+      - name: Commit release changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(release): ${{ steps.version.outputs.next }}"
+          git push origin release/${{ steps.version.outputs.version }}
+
+      - name: Open release PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head release/${{ steps.version.outputs.version }} \
+            --title "Release ${{ steps.version.outputs.next }}" \
+            --body "Changelog generado automáticamente con git-cliff. Revisar antes de mergear — al mergear se publica el Release y el tag ${{ steps.version.outputs.next }} solos."
