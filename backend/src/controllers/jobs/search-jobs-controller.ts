@@ -3,6 +3,7 @@ import { apify } from '../../utils/apify-client.js';
 import type { Job, JobSearchParams } from '../../types/job.types.js';
 import { logger } from '../../utils/logger.js';
 import { getCached, searchCacheKey, setCached } from '../../utils/search-cache.js';
+import { searchFreeProviders } from '../../external-apis/multi-provider-search.js';
 
 const LEGACY_KEYWORD_ACTOR = 'bebity~linkedin-jobs-scraper';
 const URL_SEARCH_ACTOR = 'curious_coder/linkedin-jobs-scraper';
@@ -99,26 +100,12 @@ function normalize(raw: RawApifyJob, index: number): Job {
     description: raw.descriptionText ?? raw.description ?? '',
     url: raw.jobUrl ?? raw.link ?? raw.url ?? '',
     postedAt: raw.postedAt ?? raw.postedTime,
+    provider: 'linkedin',
   };
 }
 
-/**
- * Busca ofertas en LinkedIn por Apify con fallback al actor por URL si el actor legacy requiere alquiler.
- */
-export async function searchJobsController(params: JobSearchParams): Promise<Job[]> {
-  const cacheKey = searchCacheKey({
-    keywords: params.keywords,
-    location: params.location ?? '',
-    remote: params.remote ?? false,
-    limit: params.limit ?? 50,
-  });
-
-  const cached = getCached<Job[]>(cacheKey);
-  if (cached) {
-    logger.info('Apify: resultados servidos desde cache', { keywords: params.keywords });
-    return cached;
-  }
-
+/** Busca ofertas en LinkedIn por Apify con fallback al actor por URL si el actor legacy requiere alquiler. */
+async function searchLinkedInJobs(params: JobSearchParams): Promise<Job[]> {
   const actor = getJobsActorConfig(env.apify.jobsActor);
 
   logger.info('Apify: ejecutando actor de jobs', {
@@ -131,7 +118,6 @@ export async function searchJobsController(params: JobSearchParams): Promise<Job
     const items = await loadActorItems(actor, params);
     const jobs = (items as RawApifyJob[]).map(normalize);
     logger.info(`Apify: ${jobs.length} ofertas recuperadas`);
-    setCached(cacheKey, jobs);
     return jobs;
   } catch (error) {
     if (!shouldFallbackToUrlActor(actor, error)) throw error;
@@ -144,7 +130,54 @@ export async function searchJobsController(params: JobSearchParams): Promise<Job
     const items = await loadActorItems(fallbackActor, params);
     const jobs = (items as RawApifyJob[]).map(normalize);
     logger.info(`Apify fallback: ${jobs.length} ofertas recuperadas`);
-    setCached(cacheKey, jobs);
     return jobs;
   }
+}
+
+/** Combina jobs de varias fuentes descartando duplicados por URL (o id si no hay URL). */
+function dedupeByUrl(jobs: Job[]): Job[] {
+  const byKey = new Map<string, Job>();
+  for (const job of jobs) {
+    const key = job.url || job.id;
+    if (!byKey.has(key)) byKey.set(key, job);
+  }
+  return [...byKey.values()];
+}
+
+/**
+ * Busca ofertas combinando LinkedIn (Apify) con las fuentes gratuitas sin registro.
+ * Si una fuente falla, se ignora y se sigue con las demás — nunca rompe la búsqueda completa.
+ */
+export async function searchJobsController(params: JobSearchParams): Promise<Job[]> {
+  const cacheKey = searchCacheKey({
+    keywords: params.keywords,
+    location: params.location ?? '',
+    remote: params.remote ?? false,
+    limit: params.limit ?? 50,
+  });
+
+  const cached = getCached<Job[]>(cacheKey);
+  if (cached) {
+    logger.info('Busqueda de jobs: resultados servidos desde cache', { keywords: params.keywords });
+    return cached;
+  }
+
+  const [linkedInResult, freeProvidersResult] = await Promise.allSettled([
+    searchLinkedInJobs(params),
+    searchFreeProviders(params),
+  ]);
+
+  const linkedInJobs = linkedInResult.status === 'fulfilled' ? linkedInResult.value : [];
+  if (linkedInResult.status === 'rejected') {
+    const message =
+      linkedInResult.reason instanceof Error ? linkedInResult.reason.message : 'error desconocido';
+    logger.error(`Apify: fuente no disponible — ${message}`);
+  }
+  const freeJobs = freeProvidersResult.status === 'fulfilled' ? freeProvidersResult.value : [];
+
+  const jobs = dedupeByUrl([...linkedInJobs, ...freeJobs]);
+  logger.info(`Busqueda de jobs: ${jobs.length} ofertas unicas combinadas`);
+
+  setCached(cacheKey, jobs);
+  return jobs;
 }
