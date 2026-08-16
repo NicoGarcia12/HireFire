@@ -104,21 +104,13 @@ function normalize(raw: RawApifyJob, index: number): Job {
   };
 }
 
-/** Busca ofertas en LinkedIn por Apify con fallback al actor por URL si el actor legacy requiere alquiler. */
-async function searchLinkedInJobs(params: JobSearchParams): Promise<Job[]> {
-  const actor = getJobsActorConfig(env.apify.jobsActor);
-
-  logger.info('Apify: ejecutando actor de jobs', {
-    actor: actor.actorId,
-    keywords: params.keywords,
-    limit: params.limit ?? 50,
-  });
+/** Corre un actor puntual, con fallback al actor por URL si el actor legacy requiere alquiler. */
+async function loadJobsFromActor(actorId: string, params: JobSearchParams): Promise<Job[]> {
+  const actor = getJobsActorConfig(actorId);
 
   try {
     const items = await loadActorItems(actor, params);
-    const jobs = (items as RawApifyJob[]).map(normalize);
-    logger.info(`Apify: ${jobs.length} ofertas recuperadas`);
-    return jobs;
+    return (items as RawApifyJob[]).map(normalize);
   } catch (error) {
     if (!shouldFallbackToUrlActor(actor, error)) throw error;
 
@@ -128,10 +120,36 @@ async function searchLinkedInJobs(params: JobSearchParams): Promise<Job[]> {
       strategy: 'linkedin-search-url',
     };
     const items = await loadActorItems(fallbackActor, params);
-    const jobs = (items as RawApifyJob[]).map(normalize);
-    logger.info(`Apify fallback: ${jobs.length} ofertas recuperadas`);
-    return jobs;
+    return (items as RawApifyJob[]).map(normalize);
   }
+}
+
+/**
+ * Prueba todos los actores Apify configurados (`APIFY_JOBS_ACTORS`) para LinkedIn, en orden,
+ * y combina los resultados de todos los que respondan. Si un actor falla se loguea y se sigue
+ * con el siguiente — un actor bloqueado por LinkedIn no tira abajo a los demás.
+ */
+async function searchLinkedInJobs(params: JobSearchParams): Promise<Job[]> {
+  const jobs: Job[] = [];
+
+  for (const actorId of env.apify.jobsActors) {
+    logger.info('Apify: ejecutando actor de jobs', {
+      actor: actorId,
+      keywords: params.keywords,
+      limit: params.limit ?? 50,
+    });
+
+    try {
+      const actorJobs = await loadJobsFromActor(actorId, params);
+      logger.info(`Apify [${actorId}]: ${actorJobs.length} ofertas recuperadas`);
+      jobs.push(...actorJobs);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'error desconocido';
+      logger.warn(`Apify [${actorId}]: error — ${message}`);
+    }
+  }
+
+  return jobs;
 }
 
 /** Combina jobs de varias fuentes descartando duplicados por URL (o id si no hay URL). */

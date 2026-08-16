@@ -44,7 +44,7 @@ vi.mock('../src/config/env.js', () => ({
   env: {
     port: 3000,
     databaseUrl: 'postgres://fake',
-    apify: { token: 'fake-token', jobsActor: mocks.LEGACY_ACTOR },
+    apify: { token: 'fake-token', jobsActors: [mocks.LEGACY_ACTOR] },
     groq: { apiKey: 'fake-key', baseUrl: 'https://fake', model: 'fake-model' },
   },
 }));
