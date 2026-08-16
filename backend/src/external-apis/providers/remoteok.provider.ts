@@ -4,7 +4,8 @@ import { matchesKeywords } from '../keyword-filter.js';
 
 const API_URL = 'https://remoteok.com/api';
 // RemoteOK devuelve 403 sin un User-Agent que parezca de navegador.
-const USER_AGENT = 'Mozilla/5.0 (compatible; HireFireBot/1.0; +https://github.com/NicoGarcia12/HireFire)';
+const USER_AGENT =
+  'Mozilla/5.0 (compatible; HireFireBot/1.0; +https://github.com/NicoGarcia12/HireFire)';
 
 interface RawRemoteOkItem {
   id?: string;
@@ -19,8 +20,9 @@ interface RawRemoteOkItem {
 }
 
 /** El primer item del array es un aviso legal, no una oferta. */
-function isJobItem(item: RawRemoteOkItem): item is Required<Pick<RawRemoteOkItem, 'id' | 'position' | 'company'>> &
-  RawRemoteOkItem {
+function isJobItem(
+  item: RawRemoteOkItem,
+): item is Required<Pick<RawRemoteOkItem, 'id' | 'position' | 'company'>> & RawRemoteOkItem {
   return Boolean(item.id && item.position && item.company);
 }
 
@@ -47,7 +49,9 @@ export async function searchRemoteOk(params: JobSearchParams): Promise<Job[]> {
 
   return items
     .filter(isJobItem)
-    .filter((raw) => matchesKeywords(`${raw.position} ${(raw.tags ?? []).join(' ')}`, params.keywords))
+    .filter((raw) =>
+      matchesKeywords(`${raw.position} ${(raw.tags ?? []).join(' ')}`, params.keywords),
+    )
     .slice(0, limit)
     .map(normalize);
 }

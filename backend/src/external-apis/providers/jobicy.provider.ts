@@ -43,7 +43,9 @@ export async function searchJobicy(params: JobSearchParams): Promise<Job[]> {
   const response = await fetchJson<JobicyResponse>(url.toString());
 
   return response.jobs
-    .filter((raw) => matchesKeywords(`${raw.jobTitle} ${raw.jobIndustry.join(' ')}`, params.keywords))
+    .filter((raw) =>
+      matchesKeywords(`${raw.jobTitle} ${raw.jobIndustry.join(' ')}`, params.keywords),
+    )
     .slice(0, limit)
     .map(normalize);
 }
