@@ -25,8 +25,9 @@ jobs:
         id: version
         run: |
           NEXT=$(git cliff --bumped-version)
-          if [ -z "$NEXT" ]; then
-            echo "No hay commits nuevos desde el último release, no hace falta cortar uno." >&2
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$NEXT" ] || [ "$NEXT" = "$LAST_TAG" ]; then
+            echo "No hay commits releasables nuevos desde $LAST_TAG, no hace falta cortar un release." >&2
             exit 1
           fi
           echo "next=$NEXT" >> "$GITHUB_OUTPUT"
@@ -37,8 +38,9 @@ jobs:
 
       - name: Generate changelog
         run: |
-          git cliff --tag ${{ steps.version.outputs.next }} --prepend CHANGELOG.md --unreleased
-          if [ ! -s CHANGELOG.md ]; then
+          if [ -f CHANGELOG.md ]; then
+            git cliff --tag ${{ steps.version.outputs.next }} --prepend CHANGELOG.md --unreleased
+          else
             git cliff --tag ${{ steps.version.outputs.next }} --output CHANGELOG.md
           fi
 
