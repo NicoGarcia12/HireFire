@@ -62,5 +62,5 @@ export async function fillProfile(page: Page, headline = 'Frontend Developer'): 
   await fillMaterialInput(page, 'exp-title-0', 'Dev');
   await fillMaterialInput(page, 'exp-company-0', 'Acme');
   await page.locator('[data-testid="save-profile-btn"]').click();
-  await page.getByText('Guardado ✓').waitFor();
+  await page.getByText('Guardado').waitFor();
 }

@@ -9,6 +9,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatOptionModule } from '@angular/material/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
@@ -54,6 +55,7 @@ function csvToArray(value: string): string[] {
     MatSelectModule,
     MatOptionModule,
     MatDialogModule,
+    MatIconModule,
     MatSlider,
     MatSliderThumb,
     JobCardComponent,
