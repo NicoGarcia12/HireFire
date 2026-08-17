@@ -8,7 +8,13 @@ const mocks = vi.hoisted(() => {
     actorCalls: { actorId: string; input: unknown }[];
     datasetItemsQueue: unknown[][];
     failNextCallWithRentalError: boolean;
-  } = { actorCalls: [], datasetItemsQueue: [], failNextCallWithRentalError: false };
+    failNextCallWithGenericError: boolean;
+  } = {
+    actorCalls: [],
+    datasetItemsQueue: [],
+    failNextCallWithRentalError: false,
+    failNextCallWithGenericError: false,
+  };
 
   return {
     LEGACY_ACTOR,
@@ -20,6 +26,10 @@ const mocks = vi.hoisted(() => {
         if (state.failNextCallWithRentalError) {
           state.failNextCallWithRentalError = false;
           throw new Error('You must rent a paid Actor to run it.');
+        }
+        if (state.failNextCallWithGenericError) {
+          state.failNextCallWithGenericError = false;
+          throw new Error('Apify: timeout de red');
         }
         return { defaultDatasetId: 'dataset-1' };
       },
@@ -34,7 +44,7 @@ vi.mock('../src/config/env.js', () => ({
   env: {
     port: 3000,
     databaseUrl: 'postgres://fake',
-    apify: { token: 'fake-token', jobsActor: mocks.LEGACY_ACTOR },
+    apify: { token: 'fake-token', jobsActors: [mocks.LEGACY_ACTOR] },
     groq: { apiKey: 'fake-key', baseUrl: 'https://fake', model: 'fake-model' },
   },
 }));
@@ -43,12 +53,21 @@ vi.mock('../src/utils/apify-client.js', () => ({
   apify: { actor: mocks.actor, dataset: mocks.dataset },
 }));
 
+// Las fuentes gratuitas no son el foco de este archivo (ver providers.test.ts) — se apagan
+// para que estos tests de LinkedIn/Apify no dependan de la red.
+vi.mock('../src/utils/http-client.js', () => ({
+  fetchJson: vi.fn().mockRejectedValue(new Error('red deshabilitada en este test')),
+}));
+
 import { searchJobsController } from '../src/controllers/jobs/search-jobs-controller.js';
+import { fetchJson } from '../src/utils/http-client.js';
 
 beforeEach(() => {
   mocks.state.actorCalls = [];
   mocks.state.datasetItemsQueue = [];
   mocks.state.failNextCallWithRentalError = false;
+  mocks.state.failNextCallWithGenericError = false;
+  vi.mocked(fetchJson).mockReset().mockRejectedValue(new Error('red deshabilitada en este test'));
 });
 
 describe('searchJobsController() — normalization', () => {
@@ -76,6 +95,7 @@ describe('searchJobsController() — normalization', () => {
       description: 'desc1',
       url: 'https://x/j1',
       postedAt: undefined,
+      provider: 'linkedin',
     } satisfies Job);
   });
 
@@ -101,6 +121,32 @@ describe('searchJobsController() — legacy actor fallback', () => {
     expect(mocks.state.actorCalls[0]?.actorId).toBe(mocks.LEGACY_ACTOR);
     expect(mocks.state.actorCalls[1]?.actorId).toBe(mocks.URL_SEARCH_ACTOR);
     expect(jobs.length).toBe(1);
+  });
+});
+
+describe('searchJobsController() — resilience', () => {
+  it('keeps free-provider results when the LinkedIn actor fails with a non-rental error', async () => {
+    mocks.state.failNextCallWithGenericError = true;
+    vi.mocked(fetchJson).mockResolvedValueOnce({
+      data: [
+        {
+          slug: 'dev-1',
+          company_name: 'FreeCo',
+          title: 'Resilience Dev',
+          description: 'desc',
+          remote: true,
+          url: 'https://arbeitnow.test/dev-1',
+          tags: [],
+          location: 'Remote',
+          created_at: 1700000000,
+        },
+      ],
+    });
+
+    const jobs = await searchJobsController({ keywords: 'resilience', limit: 10 });
+
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]?.provider).toBe('arbeitnow');
   });
 });
 

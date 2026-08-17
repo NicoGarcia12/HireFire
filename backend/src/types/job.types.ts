@@ -1,3 +1,13 @@
+export const JOB_PROVIDER_IDS = [
+  'linkedin',
+  'arbeitnow',
+  'remoteok',
+  'remotive',
+  'jobicy',
+  'himalayas',
+] as const;
+export type JobProviderId = (typeof JOB_PROVIDER_IDS)[number];
+
 export interface Job {
   id: string;
   title: string;
@@ -7,6 +17,8 @@ export interface Job {
   description: string;
   url: string;
   postedAt?: string;
+  /** Fuente externa de la que se obtuvo la oferta. */
+  provider: JobProviderId;
 }
 
 export interface JobSearchParams {
