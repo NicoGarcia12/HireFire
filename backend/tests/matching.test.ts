@@ -39,11 +39,12 @@ vi.mock('../src/config/env.js', () => ({
     databaseUrl: 'postgres://fake',
     apify: { token: 'fake-token', jobsActors: ['fake-actor'] },
     groq: { apiKey: 'fake-key', baseUrl: 'https://fake', model: 'fake-model' },
+    openrouter: { apiKey: undefined, baseUrl: 'https://fake', model: 'fake-model' },
   },
 }));
 
 vi.mock('../src/utils/groq-client.js', () => ({
-  groq: { chat: { completions: { create: mocks.chatCreate } } },
+  createChatCompletion: mocks.chatCreate,
 }));
 
 import { rankJobsController } from '../src/controllers/matching/rank-jobs-controller.js';

@@ -1,5 +1,4 @@
-import { env } from '../../config/env.js';
-import { groq } from '../../utils/groq-client.js';
+import { createChatCompletion } from '../../utils/groq-client.js';
 import type { Profile } from '../../types/profile.types.js';
 import type { ProfileAnalysis } from '../../types/profile-analysis.types.js';
 import { logger } from '../../utils/logger.js';
@@ -28,8 +27,7 @@ function profileText(profile: Profile): string {
 export async function analyzeProfileWithGroq(profile: Profile): Promise<ProfileAnalysis> {
   logger.info('Analizando perfil con Groq', { profileId: profile.id });
 
-  const response = await groq.chat.completions.create({
-    model: env.groq.model,
+  const response = await createChatCompletion({
     max_tokens: 2048,
     messages: [
       {
