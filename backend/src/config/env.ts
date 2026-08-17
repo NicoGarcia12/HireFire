@@ -34,6 +34,11 @@ export const env = {
   groq: {
     apiKey: required('GROQ_API_KEY'),
     baseUrl: optional('GROQ_BASE_URL', 'https://api.groq.com/openai/v1'),
-    model: optional('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+    model: optional('GROQ_MODEL', 'openai/gpt-oss-120b'),
+  },
+  openrouter: {
+    apiKey: process.env.OPENROUTER_API_KEY || undefined,
+    baseUrl: optional('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
+    model: optional('OPENROUTER_MODEL', 'meta-llama/llama-3.3-70b-instruct:free'),
   },
 } as const;

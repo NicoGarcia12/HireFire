@@ -1,5 +1,4 @@
-import { env } from '../../config/env.js';
-import { groq } from '../../utils/groq-client.js';
+import { createChatCompletion } from '../../utils/groq-client.js';
 import type { Job } from '../../types/job.types.js';
 import type { MatchResult } from '../../types/matching.types.js';
 import type { Profile } from '../../types/profile.types.js';
@@ -54,8 +53,7 @@ function parseScores(text: string): JobScore[] {
 }
 
 async function scoreBatch(profile: Profile, jobs: Job[]): Promise<JobScore[]> {
-  const response = await groq.chat.completions.create({
-    model: env.groq.model,
+  const response = await createChatCompletion({
     max_tokens: 2048,
     messages: [
       {
