@@ -30,6 +30,16 @@ jobs:
             echo "No hay commits releasables nuevos desde $LAST_TAG, no hace falta cortar un release." >&2
             exit 1
           fi
+
+          # Regla del proyecto: la primera release real siempre es 1.0.0, sin importar
+          # qué de vaya a marcar el bump automático. Aplica solo mientras el último tag
+          # siga en 0.x (o no exista ninguno todavía); de ahí en más el cálculo es normal.
+          LAST_MAJOR="${LAST_TAG#v}"
+          LAST_MAJOR="${LAST_MAJOR%%.*}"
+          if [ -z "$LAST_TAG" ] || [ "$LAST_MAJOR" = "0" ]; then
+            NEXT="v1.0.0"
+          fi
+
           echo "next=$NEXT" >> "$GITHUB_OUTPUT"
           echo "version=${NEXT#v}" >> "$GITHUB_OUTPUT"
 
