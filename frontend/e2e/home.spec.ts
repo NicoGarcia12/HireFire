@@ -19,7 +19,7 @@ test.describe('HireFire — flujo principal', () => {
   test('guarda el perfil y habilita la búsqueda', async ({ page }) => {
     await fillProfile(page);
 
-    await expect(page.getByText('Guardado ✓')).toBeVisible();
+    await expect(page.getByText('Guardado')).toBeVisible();
     await expect(page.locator('[data-testid="search-submit"]')).toBeEnabled();
   });
 

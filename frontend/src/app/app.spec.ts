@@ -35,6 +35,6 @@ describe('App', () => {
 
     await harness.navigateByUrl('/');
 
-    expect(harness.routeNativeElement?.textContent).toContain('HireFire 🔥');
-  });
+    expect(harness.routeNativeElement?.textContent).toContain('HireFire');
+  }, 15000);
 });

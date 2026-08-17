@@ -7,11 +7,14 @@
       [attr.aria-label]="isDarkMode() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
       (click)="toggleTheme()"
     >
-      {{ isDarkMode() ? '☀️' : '🌙' }}
+      <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
     </button>
-    <h1>HireFire 🔥</h1>
+    <h1>HireFire <mat-icon class="hf-hero__icon">local_fire_department</mat-icon></h1>
     <p>Cargá tu perfil, buscá por palabras clave y dejá que Groq/Llama rankee las ofertas.</p>
-    <a routerLink="/postulaciones" class="hf-nav-link">📋 Ver mis postulaciones</a>
+    <a routerLink="/postulaciones" class="hf-nav-link">
+      <mat-icon>list_alt</mat-icon>
+      Ver mis postulaciones
+    </a>
   </header>
 
   <!-- ══════════════════ STEPPER ══════════════════ -->
@@ -21,7 +24,13 @@
       [class.hf-stepper__step--done]="!!profileId()"
       [class.hf-stepper__step--active]="!profileId()"
     >
-      <div class="hf-stepper__bubble">{{ profileId() ? '✓' : '1' }}</div>
+      <div class="hf-stepper__bubble">
+        @if (profileId()) {
+          <mat-icon>check</mat-icon>
+        } @else {
+          1
+        }
+      </div>
       <span class="hf-stepper__label">Perfil</span>
     </div>
     <div class="hf-stepper__line" [class.hf-stepper__line--done]="!!profileId()"></div>
@@ -30,12 +39,24 @@
       [class.hf-stepper__step--done]="results().length > 0"
       [class.hf-stepper__step--active]="!!profileId() && !results().length"
     >
-      <div class="hf-stepper__bubble">{{ results().length > 0 ? '✓' : '2' }}</div>
+      <div class="hf-stepper__bubble">
+        @if (results().length > 0) {
+          <mat-icon>check</mat-icon>
+        } @else {
+          2
+        }
+      </div>
       <span class="hf-stepper__label">Buscar</span>
     </div>
     <div class="hf-stepper__line" [class.hf-stepper__line--done]="results().length > 0"></div>
     <div class="hf-stepper__step" [class.hf-stepper__step--done]="results().length > 0">
-      <div class="hf-stepper__bubble">{{ results().length > 0 ? '✓' : '3' }}</div>
+      <div class="hf-stepper__bubble">
+        @if (results().length > 0) {
+          <mat-icon>check</mat-icon>
+        } @else {
+          3
+        }
+      </div>
       <span class="hf-stepper__label">Resultados</span>
     </div>
   </nav>
@@ -52,10 +73,14 @@
           <h2 class="hf-card__title">1 · Tu perfil</h2>
           <div class="hf-head-actions">
             @if (profileId()) {
-              <span class="hf-pill hf-pill--ok">Guardado ✓</span>
+              <span class="hf-pill hf-pill--ok"><mat-icon>check</mat-icon> Guardado</span>
             }
             <button mat-stroked-button [disabled]="importing()" (click)="fileInput.click()">
-              {{ importing() ? 'Importando…' : '⬆ Importar LinkedIn ZIP' }}
+              @if (importing()) {
+                Importando…
+              } @else {
+                <ng-container><mat-icon>upload</mat-icon> Importar LinkedIn ZIP</ng-container>
+              }
             </button>
             <input #fileInput type="file" accept=".zip" (change)="onFileChange($event)" hidden />
           </div>
@@ -144,7 +169,7 @@
                       [attr.aria-label]="'Quitar experiencia ' + ($index + 1)"
                       (click)="removeExp($index)"
                     >
-                      ✕
+                      <mat-icon>close</mat-icon>
                     </button>
                   </div>
                 }
@@ -175,7 +200,11 @@
                   [disabled]="analyzing()"
                   (click)="analyzeProfile()"
                 >
-                  {{ analyzing() ? 'Analizando…' : '🔍 Analizar perfil' }}
+                  @if (analyzing()) {
+                    Analizando…
+                  } @else {
+                    <ng-container><mat-icon>search</mat-icon> Analizar perfil</ng-container>
+                  }
                 </button>
               }
             </div>
@@ -210,7 +239,7 @@
             @if (a.strengths.length) {
               <div class="hf-analysis-block">
                 <h3 class="hf-analysis-block__title hf-analysis-block__title--ok">
-                  ✓ Puntos fuertes
+                  <mat-icon>check</mat-icon> Puntos fuertes
                 </h3>
                 <ul>
                   @for (s of a.strengths; track s) {
@@ -261,13 +290,15 @@
                     >
                   </div>
                   <div class="hf-item__actions">
-                    <button mat-stroked-button (click)="runSaved(s)">▶ Ejecutar</button>
+                    <button mat-stroked-button (click)="runSaved(s)">
+                      <mat-icon>play_arrow</mat-icon> Ejecutar
+                    </button>
                     <button
                       mat-icon-button
                       aria-label="Eliminar búsqueda guardada"
                       (click)="deleteSaved(s.id)"
                     >
-                      ✕
+                      <mat-icon>delete</mat-icon>
                     </button>
                   </div>
                 </div>
@@ -397,7 +428,7 @@
                         "
                         (click)="removeAllowedLanguage($index)"
                       >
-                        ✕
+                        <mat-icon>close</mat-icon>
                       </button>
                     </div>
                   }
@@ -417,7 +448,11 @@
               </button>
               @if (results().length > 0) {
                 <button type="button" mat-stroked-button (click)="toggleSaveDialog()">
-                  {{ showSaveDialog() ? 'Cancelar' : '💾 Guardar búsqueda' }}
+                  @if (showSaveDialog()) {
+                    Cancelar
+                  } @else {
+                    <ng-container><mat-icon>save</mat-icon> Guardar búsqueda</ng-container>
+                  }
                 </button>
               }
             </div>
@@ -489,7 +524,7 @@
                 }
               </h2>
               <button type="button" mat-stroked-button (click)="exportResults()">
-                ⬇ Exportar CSV
+                <mat-icon>download</mat-icon> Exportar CSV
               </button>
             </div>
 
@@ -546,13 +581,15 @@
                       </span>
                     </div>
                     <div class="hf-item__actions">
-                      <button mat-stroked-button (click)="rerunHistory(h)">▶ Re-ejecutar</button>
+                      <button mat-stroked-button (click)="rerunHistory(h)">
+                        <mat-icon>replay</mat-icon> Re-ejecutar
+                      </button>
                       <button
                         mat-icon-button
                         aria-label="Eliminar historial"
                         (click)="deleteHistory(h.id)"
                       >
-                        ✕
+                        <mat-icon>delete</mat-icon>
                       </button>
                     </div>
                   </div>
